@@ -118,6 +118,7 @@ class MapCEN:
 
 
         self.dlg.commandLinkButton_2.setEnabled(True)
+        self.dlg.lineEdit.setEnabled(False)
         self.dlg.commandLinkButton_4.setEnabled(False)
         self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.commandLinkButton_6.setEnabled(False)
@@ -282,10 +283,48 @@ class MapCEN:
         self.vlayer.triggerRepaint()
 
         for p in self.vlayer.getFeatures():
-            listes_sites_MFU.append(str(p.attributes()[2]))
+            listes_sites_MFU.append(str(p.attributes()[2]).lower())
+
+        # self.dlg.comboBox_2.addItems(listes_sites_MFU)
+
+        completer = QCompleter(listes_sites_MFU)
+        self.dlg.lineEdit.setCompleter(completer)
 
 
-        self.dlg.comboBox_2.addItems(listes_sites_MFU)
+
+
+
+
+
+        project = QgsProject.instance()
+
+        mises_en_page = []
+
+        for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                layout = QgsPrintLayout(project)
+                layout.initializeDefaults()
+                template_content = f.read()
+                doc = QDomDocument()
+                doc.setContent(template_content)
+                layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
+                layout.setName(os.path.basename(filename))
+                project.layoutManager().addLayout(layout)
+                mises_en_page.append(filename)
+
+        self.dlg.tableWidget.setRowCount(len(mises_en_page))
+        self.dlg.tableWidget.setColumnCount(1)
+        self.dlg.tableWidget.setColumnWidth(0, 300)
+        self.dlg.tableWidget.setHorizontalHeaderLabels(["Modèles de mises en page"])
+        self.dlg.tableWidget.verticalHeader().setVisible(False)
+
+
+        for i, filename in enumerate(mises_en_page):
+            nom_fichier = os.path.basename(filename)
+            item = QTableWidgetItem(nom_fichier)
+            self.dlg.tableWidget.setItem(i, 0, item)
+
+
 
         self.ajout_couches()
 
@@ -324,7 +363,7 @@ class MapCEN:
         if not QgsProject.instance().mapLayersByName("Sites gérés CEN-NA"):
             QgsProject.instance().addMapLayer(self.vlayer)
         if not self.vlayer:
-            QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.comboBox_2.currentText(), QMessageBox.Ok)
+            QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.lineEdit.text(), QMessageBox.Ok)
 
         self.depts_NA = iface.addVectorLayer(
             "https://opendata.cen-nouvelle-aquitaine.org/administratif/wfs?VERSION=1.0.0&TYPENAME=administratif:departement&SRSNAME=EPSG:4326&request=GetFeature",
@@ -347,6 +386,7 @@ class MapCEN:
     def activation_boutons(self):
 
         # self.dlg.comboBox_2.setEnabled(True)
+        self.dlg.lineEdit.setEnabled(True)
         self.dlg.commandLinkButton_4.setEnabled(True)
         self.dlg.commandLinkButton_5.setEnabled(True)
         self.dlg.commandLinkButton_6.setEnabled(True)
@@ -422,7 +462,7 @@ class MapCEN:
 
         # ### Zoom sur emprise du site CEN selectionné:
 
-        self.vlayer.selectByExpression("\"nom_site\"= '" + self.dlg.comboBox_2.currentText() + "'")
+        self.vlayer.selectByExpression("\"nom_site\"= '" + self.dlg.lineEdit.text() + "'")
 
         iface.mapCanvas().zoomToSelected(self.vlayer)
 
@@ -469,7 +509,7 @@ class MapCEN:
         # refresh the layer on the map canvas
         self.vlayer.triggerRepaint()
 
-        expr = "\"nom_site\"= '" + self.dlg.comboBox_2.currentText() + "'"
+        expr = "\"nom_site\"= '" + self.dlg.lineEdit.text() + "'"
         self.layer.setSubsetString(expr)
 
         self.mise_en_page()
@@ -627,7 +667,7 @@ class MapCEN:
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str("Maîtrise foncière sur le site : " + self.dlg.comboBox_2.currentText() + " (" + self.vlayer.selectedFeatures()[0]["codesite"] + ")")
+        titre = str("Maîtrise foncière sur le site : " + self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"] + ")")
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.adjustSizeToText()
@@ -756,28 +796,13 @@ class MapCEN:
 
     def test(self):
 
-        project = QgsProject.instance()
-
-        mises_en_page = []
-
-        for filename in glob.glob("C:/Users/cen/Downloads/*.qpt"):
-            with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                layout = QgsPrintLayout(project)
-                layout.initializeDefaults()
-                template_content = f.read()
-                doc = QDomDocument()
-                doc.setContent(template_content)
-                items, ok = layout.loadFromTemplate(doc, QgsReadWriteContext(), False)
-                layout.setName(os.path.basename(filename))
-                project.layoutManager().addLayout(layout)
-                mises_en_page.append(filename)
-
-        self.dlg.tableWidget.setRowCount(len(mises_en_page))
-        self.dlg.tableWidget.setColumnCount(1)
+        for row in range(self.dlg.tableWidget.rowCount()):
+            # item(row, 0) Returns the item for the given row and column if one has been set; otherwise returns nullptr.
+            _item = self.dlg.tableWidget.item(row, 0).text()
+            print(_item)
 
 
-        for i, filename in enumerate(mises_en_page):
-            nom_fichier = os.path.basename(filename)
-            item = QTableWidgetItem(os.path.splitext(nom_fichier)[0])
-            self.dlg.tableWidget.setItem(i, 0, item)
+        layout2 = QgsProject.instance().layoutManager().layoutByName(_item)
 
+
+        iface.openLayoutDesigner(layout2)

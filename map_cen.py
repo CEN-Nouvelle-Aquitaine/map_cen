@@ -283,11 +283,12 @@ class MapCEN:
         self.vlayer.triggerRepaint()
 
         for p in self.vlayer.getFeatures():
-            listes_sites_MFU.append(str(p.attributes()[2]).lower())
+            listes_sites_MFU.append(str(p.attributes()[2]))
 
         # self.dlg.comboBox_2.addItems(listes_sites_MFU)
 
         completer = QCompleter(listes_sites_MFU)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.dlg.lineEdit.setCompleter(completer)
 
 
@@ -301,19 +302,33 @@ class MapCEN:
         mises_en_page = []
 
         for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                layout = QgsPrintLayout(project)
+                layout.initializeDefaults()
+                template_content = f.read()
+                doc = QDomDocument()
+                doc.setContent(template_content)
+                layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
+                layout.setName(os.path.basename(filename))
+                project.layoutManager().addLayout(layout)
                 mises_en_page.append(filename)
-
-        self.dlg.tableWidget.setRowCount(len(mises_en_page))
-        self.dlg.tableWidget.setColumnCount(1)
-        self.dlg.tableWidget.setColumnWidth(0, 300)
-        self.dlg.tableWidget.setHorizontalHeaderLabels(["Modèles de mises en page"])
-        self.dlg.tableWidget.verticalHeader().setVisible(False)
 
 
         for i, filename in enumerate(mises_en_page):
             nom_fichier = os.path.basename(filename)
-            item = QTableWidgetItem(nom_fichier)
-            self.dlg.tableWidget.setItem(i, 0, item)
+            print(nom_fichier)
+            self.dlg.comboBox.addItem(nom_fichier)
+
+        # self.dlg.tableWidget.setRowCount(len(mises_en_page))
+        # self.dlg.tableWidget.setColumnCount(1)
+        # self.dlg.tableWidget.setColumnWidth(0, 300)
+        # self.dlg.tableWidget.setHorizontalHeaderLabels(["Modèles de mises en page"])
+        # self.dlg.tableWidget.verticalHeader().setVisible(False)
+        #
+        # for i, filename in enumerate(mises_en_page):
+        #     nom_fichier = os.path.basename(filename)
+        #     item = QTableWidgetItem(nom_fichier)
+        #     self.dlg.tableWidget.setItem(i, 0, item)
 
 
 
@@ -789,22 +804,13 @@ class MapCEN:
 
         project = QgsProject.instance()
 
-        current_row = self.dlg.tableWidget.currentRow()
-        current_column = self.dlg.tableWidget.currentColumn()
-        _item = self.dlg.tableWidget.item(current_row, current_column).text()
+        # current_row = self.dlg.tableWidget.currentRow()
+        # current_column = self.dlg.tableWidget.currentColumn()
+        # _item = self.dlg.tableWidget.item(current_row, current_column).text()
 
-        with open(self.plugin_path + "/mises_en_pages/" + _item, 'r') as f:
-            layout = QgsPrintLayout(project)
-            layout.initializeDefaults()
-            template_content = f.read()
-            doc = QDomDocument()
-            doc.setContent(template_content)
-            layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
-            layout.setName(_item)
-            project.layoutManager().addLayout(layout)
+        fichier_mise_en_page = self.dlg.comboBox.currentText()
 
-
-        layout2 = QgsProject.instance().layoutManager().layoutByName(_item)
+        layout2 = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
 
 
         iface.openLayoutDesigner(layout2)

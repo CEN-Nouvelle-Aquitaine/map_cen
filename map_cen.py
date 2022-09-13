@@ -301,15 +301,6 @@ class MapCEN:
         mises_en_page = []
 
         for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
-            with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                layout = QgsPrintLayout(project)
-                layout.initializeDefaults()
-                template_content = f.read()
-                doc = QDomDocument()
-                doc.setContent(template_content)
-                layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
-                layout.setName(os.path.basename(filename))
-                project.layoutManager().addLayout(layout)
                 mises_en_page.append(filename)
 
         self.dlg.tableWidget.setRowCount(len(mises_en_page))
@@ -796,10 +787,21 @@ class MapCEN:
 
     def test(self):
 
-        for row in range(self.dlg.tableWidget.rowCount()):
-            # item(row, 0) Returns the item for the given row and column if one has been set; otherwise returns nullptr.
-            _item = self.dlg.tableWidget.item(row, 0).text()
-            print(_item)
+        project = QgsProject.instance()
+
+        current_row = self.dlg.tableWidget.currentRow()
+        current_column = self.dlg.tableWidget.currentColumn()
+        _item = self.dlg.tableWidget.item(current_row, current_column).text()
+
+        with open(self.plugin_path + "/mises_en_pages/" + _item, 'r') as f:
+            layout = QgsPrintLayout(project)
+            layout.initializeDefaults()
+            template_content = f.read()
+            doc = QDomDocument()
+            doc.setContent(template_content)
+            layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
+            layout.setName(_item)
+            project.layoutManager().addLayout(layout)
 
 
         layout2 = QgsProject.instance().layoutManager().layoutByName(_item)

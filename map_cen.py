@@ -105,7 +105,7 @@ class MapCEN:
         # self.dlg.comboBox.addItems(liste_couches_fonciercen)
 
 
-        self.dlg.commandLinkButton.clicked.connect(self.test)
+        self.dlg.commandLinkButton.clicked.connect(self.chargement_qpt)
 
         self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
         self.dlg.commandLinkButton_4.clicked.connect(self.actualisation_emprise)
@@ -798,7 +798,7 @@ class MapCEN:
         # print(result_pdf) # 0 = Export was successful!
 
 
-    def test(self):
+    def chargement_qpt(self):
 
         project = QgsProject.instance()
 
@@ -822,8 +822,8 @@ class MapCEN:
 
         layout2 = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
 
-        test = layout2.itemById("Carte 1")
-        test.zoomToExtent(iface.mapCanvas().extent())
+        map_item = layout2.itemById("Carte 1")
+        map_item.zoomToExtent(iface.mapCanvas().extent())
         #
         iface.openLayoutDesigner(layout2)
 

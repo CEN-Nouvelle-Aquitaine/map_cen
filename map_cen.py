@@ -39,6 +39,7 @@ import urllib
 import csv
 import io
 import processing
+
 from datetime import date
 
 class Calcul(QThread):
@@ -274,7 +275,7 @@ class MapCEN:
         uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:site_gere_poly&SRSNAME=EPSG:4326&authcfg=', list(self.k)[0], '&request=GetFeature']
         uri = ''.join(uri)
 
-        listes_sites_MFU = []
+        self.listes_sites_MFU = []
         self.vlayer = QgsVectorLayer(uri, "Sites gérés CEN-NA", "WFS")
         # layer.setScaleBasedVisibility(True)
         # layer.setMaximumScale(10000)
@@ -283,11 +284,11 @@ class MapCEN:
         self.vlayer.triggerRepaint()
 
         for p in self.vlayer.getFeatures():
-            listes_sites_MFU.append(str(p.attributes()[2]))
+            self.listes_sites_MFU.append(str(p.attributes()[2]))
 
         # self.dlg.comboBox_2.addItems(listes_sites_MFU)
 
-        completer = QCompleter(listes_sites_MFU)
+        completer = QCompleter(self.listes_sites_MFU)
         completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.dlg.lineEdit.setCompleter(completer)
 
@@ -391,7 +392,6 @@ class MapCEN:
 
     def actualisation_emprise(self):
 
-
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
 
         if self.dlg.radioButton.isChecked() == True:
@@ -456,60 +456,64 @@ class MapCEN:
         parent.removeChildNode(fond_carte)
 
 
-
         # ### Zoom sur emprise du site CEN selectionné:
 
-        self.vlayer.selectByExpression("\"nom_site\"= '" + self.dlg.lineEdit.text() + "'")
+        if self.dlg.lineEdit.text() in self.listes_sites_MFU:
 
-        iface.mapCanvas().zoomToSelected(self.vlayer)
+            self.vlayer.selectByExpression("\"nom_site\"= '" + self.dlg.lineEdit.text() + "'")
 
-        QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
+            iface.mapCanvas().zoomToSelected(self.vlayer)
 
-        ##On change légèrement l'échelle de visualisation du project en la diminuant légèrement car sinon zoom trop important lorsque zoomtoextent(layer) dans composeur d'impression
-        self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()*1.2)))
+            QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
 
-        rules = (
-            ('Site CEN sélectionné', "is_selected()", 'red'),
-        )
+            ##On change légèrement l'échelle de visualisation du project en la diminuant légèrement car sinon zoom trop important lorsque zoomtoextent(layer) dans composeur d'impression
+            self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()*1.2)))
 
-        # create a new rule-based renderer
-        symbol = QgsSymbol.defaultSymbol(self.vlayer.geometryType())
-        renderer = QgsRuleBasedRenderer(symbol)
+            rules = (
+                ('Site CEN sélectionné', "is_selected()", 'red'),
+            )
 
-        # get the "root" rule
-        root_rule = renderer.rootRule()
+            # create a new rule-based renderer
+            symbol = QgsSymbol.defaultSymbol(self.vlayer.geometryType())
+            renderer = QgsRuleBasedRenderer(symbol)
 
-        for label, expression, color_name in rules:
-            # create a clone (i.e. a copy) of the default rule
-            rule = root_rule.children()[0].clone()
-            # set the label, expression and color
-            rule.setLabel(label)
-            rule.setFilterExpression(expression)
-            symbol_layer = rule.symbol().symbolLayer(0)
-            print(symbol_layer)
-            color = symbol_layer.color()
-            generator = QgsGeometryGeneratorSymbolLayer.create({})
-            generator.setSymbolType(QgsSymbol.Marker)
-            generator.setGeometryExpression("centroid($geometry)")
-            generator.setColor(QColor('Red'))
-            rule.symbol().setColor(QColor(color_name))
-            # set the scale limits if they have been specified
-            # append the rule to the list of rules
-            rule.symbol().changeSymbolLayer(0, generator)
-            root_rule.appendChild(rule)
+            # get the "root" rule
+            root_rule = renderer.rootRule()
 
-        # delete the default rule
-        root_rule.removeChildAt(0)
+            for label, expression, color_name in rules:
+                # create a clone (i.e. a copy) of the default rule
+                rule = root_rule.children()[0].clone()
+                # set the label, expression and color
+                rule.setLabel(label)
+                rule.setFilterExpression(expression)
+                symbol_layer = rule.symbol().symbolLayer(0)
+                print(symbol_layer)
+                color = symbol_layer.color()
+                generator = QgsGeometryGeneratorSymbolLayer.create({})
+                generator.setSymbolType(QgsSymbol.Marker)
+                generator.setGeometryExpression("centroid($geometry)")
+                generator.setColor(QColor('Red'))
+                rule.symbol().setColor(QColor(color_name))
+                # set the scale limits if they have been specified
+                # append the rule to the list of rules
+                rule.symbol().changeSymbolLayer(0, generator)
+                root_rule.appendChild(rule)
 
-        # apply the renderer to the layer
-        self.vlayer.setRenderer(renderer)
-        # refresh the layer on the map canvas
-        self.vlayer.triggerRepaint()
+            # delete the default rule
+            root_rule.removeChildAt(0)
 
-        expr = "\"nom_site\"= '" + self.dlg.lineEdit.text() + "'"
-        self.layer.setSubsetString(expr)
+            # apply the renderer to the layer
+            self.vlayer.setRenderer(renderer)
+            # refresh the layer on the map canvas
+            self.vlayer.triggerRepaint()
 
-        self.mise_en_page()
+            expr = "\"nom_site\"= '" + self.dlg.lineEdit.text() + "'"
+            self.layer.setSubsetString(expr)
+
+            self.mise_en_page()
+
+        else:
+            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
 
 
     def mise_en_page(self):
@@ -546,29 +550,31 @@ class MapCEN:
 
         ## Add map to layout
         print("Adding map")
-        my_map1 = QgsLayoutItemMap(self.layout)
+        self.my_map1 = QgsLayoutItemMap(self.layout)
 
         # Charger une carte vide
-        my_map1.setRect(20, 20, 20, 20)
+        self.my_map1.setRect(20, 20, 20, 20)
 
-        my_map1.setLayers([self.layer, self.fond])
+        self.my_map1.setLayers([self.layer, self.fond])
 
 
         # Mettre le canvas courant comme emprise
-        my_map1.setExtent(iface.mapCanvas().extent())
+        self.my_map1.setExtent(iface.mapCanvas().extent())
 
         # Position de la carte dans le composeur
-        my_map1.attemptMove(QgsLayoutPoint(5, 23, QgsUnitTypes.LayoutMillimeters))
+        self.my_map1.attemptMove(QgsLayoutPoint(5, 23, QgsUnitTypes.LayoutMillimeters))
 
         #on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
-        my_map1.attemptResize(QgsLayoutSize(185, 182, QgsUnitTypes.LayoutMillimeters))
+        self.my_map1.attemptResize(QgsLayoutSize(185, 182, QgsUnitTypes.LayoutMillimeters))
 
-        my_map1.refresh()
+        self.my_map1.refresh()
 
-        my_map1.setBackgroundColor(QColor(255, 255, 255, 255))
-        my_map1.setFrameEnabled(True)
-        self.layout.addLayoutItem(my_map1)
+        self.my_map1.setBackgroundColor(QColor(255, 255, 255, 255))
+        self.my_map1.setFrameEnabled(True)
+        self.layout.addLayoutItem(self.my_map1)
 
+        self.my_map1.setId("carte_principale")
+        # print(self.my_map1.id())
 
         # --- create map item 2 (shapefile, raster 2, basemap)
 
@@ -618,7 +624,7 @@ class MapCEN:
 
         legend.setLegendFilterByMapEnabled(True)
         self.layout.addItem(legend)
-        legend.setLinkedMap(my_map1)
+        legend.setLinkedMap(self.my_map1)
 
         layer_to_remove = self.fond
         legend.model().rootGroup().removeLayer(layer_to_remove)
@@ -690,7 +696,7 @@ class MapCEN:
         print((u"Adding scale bar"))
         scalebar = QgsLayoutItemScaleBar(self.layout)
         scalebar.setStyle('Single Box')
-        scalebar.setLinkedMap(my_map1)
+        scalebar.setLinkedMap(self.my_map1)
         scalebar.applyDefaultSize()
         scalebar.applyDefaultSettings()
         scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
@@ -807,16 +813,14 @@ class MapCEN:
                 layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
                 layout.setName(os.path.basename(filename))
 
-                test_map = QgsLayoutItemMap(layout)
-                # Mettre le canvas courant comme emprise
-                test_map.setExtent(iface.mapCanvas().extent())
-                layout.addLayoutItem(test_map)
-
                 project.layoutManager().addLayout(layout)
 
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 
         layout2 = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
 
-
+        test = layout2.itemById("Carte 1")
+        test.zoomToExtent(iface.mapCanvas().extent())
+        #
         iface.openLayoutDesigner(layout2)
+

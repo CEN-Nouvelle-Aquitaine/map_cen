@@ -814,8 +814,6 @@ class MapCEN:
 
                 project.layoutManager().addLayout(layout)
 
-
-
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 
         layout2 = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)

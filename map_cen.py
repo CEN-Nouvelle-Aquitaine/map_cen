@@ -391,7 +391,10 @@ class MapCEN:
 
 
     def actualisation_emprise(self):
-
+    
+        if self.dlg.lineEdit.text() not in listes_sites_MFU:
+            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+            
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
 
         if self.dlg.radioButton.isChecked() == True:

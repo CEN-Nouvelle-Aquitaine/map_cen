@@ -828,4 +828,3 @@ class MapCEN:
         iface.openLayoutDesigner(layout2)
 
 
-

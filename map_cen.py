@@ -302,16 +302,7 @@ class MapCEN:
         mises_en_page = []
 
         for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
-            with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                layout = QgsPrintLayout(project)
-                layout.initializeDefaults()
-                template_content = f.read()
-                doc = QDomDocument()
-                doc.setContent(template_content)
-                layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
-                layout.setName(os.path.basename(filename))
-                project.layoutManager().addLayout(layout)
-                mises_en_page.append(filename)
+            mises_en_page.append(filename)
 
 
         for i, filename in enumerate(mises_en_page):
@@ -565,7 +556,6 @@ class MapCEN:
 
         # Mettre le canvas courant comme emprise
         my_map1.setExtent(iface.mapCanvas().extent())
-        self.layout.addLayoutItem(my_map1)
 
         # Position de la carte dans le composeur
         my_map1.attemptMove(QgsLayoutPoint(5, 23, QgsUnitTypes.LayoutMillimeters))
@@ -799,7 +789,6 @@ class MapCEN:
         # print(result_pdf) # 0 = Export was successful!
 
 
-
     def test(self):
 
         project = QgsProject.instance()
@@ -807,6 +796,25 @@ class MapCEN:
         # current_row = self.dlg.tableWidget.currentRow()
         # current_column = self.dlg.tableWidget.currentColumn()
         # _item = self.dlg.tableWidget.item(current_row, current_column).text()
+
+        for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                layout = QgsPrintLayout(project)
+                layout.initializeDefaults()
+                template_content = f.read()
+                doc = QDomDocument()
+                doc.setContent(template_content)
+                layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
+                layout.setName(os.path.basename(filename))
+
+                test_map = QgsLayoutItemMap(layout)
+                # Mettre le canvas courant comme emprise
+                test_map.setExtent(iface.mapCanvas().extent())
+                layout.addLayoutItem(test_map)
+
+                project.layoutManager().addLayout(layout)
+
+
 
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 

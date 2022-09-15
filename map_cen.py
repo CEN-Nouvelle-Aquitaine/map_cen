@@ -42,20 +42,41 @@ import processing
 
 from datetime import date
 
-class Calcul(QThread):
-    # crée un nouveau signal pour indiquer la fin du thread
-    finduthread = pyqtSignal()
-
-    # ========================================================================
+class OptionsWindow(QWidget):
     def __init__(self, parent=None):
-        super(Calcul, self).__init__(parent)
+        super(OptionsWindow, self).__init__(parent)
 
-    # ========================================================================
-    def run(self):
-        # tempo de 5 secondes pour l'exemple
-        time.sleep(5)
-        # émet le signal de fin du thread
-        self.finduthread.emit()
+        self.setWindowTitle("Options d'export")
+        self.setMinimumSize(300,200)
+        self.setMaximumSize(300,200)
+
+        titre = QLabel(self)
+        titre.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
+        titre.move(70, 20)
+        titre.setText("Résolution de la carte à exporter :")
+        a = QPushButton("Haute résolution", self)
+        a.move(90, 50)
+        a.setMinimumSize(120, 25)
+        a.setMaximumSize(120, 25)
+        b = QPushButton("Moyenne résolution", self)
+        b.move(90, 90)
+        b.setMinimumSize(120, 25)
+        b.setMaximumSize(120, 25)
+        c = QPushButton("Basse résolution", self)
+        c.move(90, 130)
+        c.setMinimumSize(120, 25)
+        c.setMaximumSize(120, 25)
+
+        a.clicked.connect(lambda: self.set_resolution(300))
+        b.clicked.connect(lambda: self.set_resolution(200))
+        c.clicked.connect(lambda: self.set_resolution(100))
+
+        # OptionsWindow().exec_()
+
+    def set_resolution(self, resolution):
+        self.a = resolution
+        MapCEN.export(self)
+
 
 class MapCEN:
     """QGIS Plugin Implementation."""
@@ -110,7 +131,7 @@ class MapCEN:
         self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
         self.dlg.commandLinkButton_4.clicked.connect(self.actualisation_emprise)
         self.dlg.commandLinkButton_5.clicked.connect(self.ouverture_composeur)
-        self.dlg.commandLinkButton_6.clicked.connect(self.export)
+        self.dlg.commandLinkButton_6.clicked.connect(self.popup)
 
         # self.default_project_scale = self.iface.mapCanvas().scale()
         # print("echelle par défaut à l'initilaisation du plugin", self.default_project_scale)
@@ -308,7 +329,6 @@ class MapCEN:
 
         for i, filename in enumerate(mises_en_page):
             nom_fichier = os.path.basename(filename)
-            print(nom_fichier)
             self.dlg.comboBox.addItem(nom_fichier)
 
         # self.dlg.tableWidget.setRowCount(len(mises_en_page))
@@ -392,7 +412,7 @@ class MapCEN:
 
     def actualisation_emprise(self):
     
-        if self.dlg.lineEdit.text() not in listes_sites_MFU:
+        if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
             QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
             
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
@@ -773,29 +793,29 @@ class MapCEN:
         self.dlg.graphicsView.setScene(self.layout2)
 
 
+
+    def popup(self):
+
+        self.dialog = OptionsWindow()  # +++ - self
+        self.dialog.show()
+
+
     def export(self):
 
-        # dossier_sauvegarde = QFileDialog.getExistingDirectory()
-        #
-        # exporter.exportToPdf(f'"{dossier_sauvegarde}/"'), QgsLayoutExporter.PdfExportSettings())
-
-
-        fileName = QFileDialog.getSaveFileName(None, 'Sauvegarder en png', '', filter='*.png')
+        fileName = QFileDialog.getSaveFileName(None, 'Sauvegarder en jpg', '', filter='*.jpg')
         if fileName:
             dossier_sauvegarde = fileName[0]
 
+        self.layout.renderContext().setDpi(OptionsWindow.a)
+
         exporter = QgsLayoutExporter(self.layout)
         settings = QgsLayoutExporter.ImageExportSettings()
-        # The idea is that here you can change setting attributes e.g :
-        # settings.cropToContents = True
-        # settings.dpi = 150
+
 
         result_png = exporter.exportToImage(dossier_sauvegarde, settings)
-        print(result_png)  # 0 = Export was successful!
 
+        # print(result_png)  # 0 = export réussi !
 
-        # result_pdf = exporter.exportToPdf(dossier_sauvegarde, QgsLayoutExporter.PdfExportSettings())
-        # print(result_pdf) # 0 = Export was successful!
 
 
     def chargement_qpt(self):

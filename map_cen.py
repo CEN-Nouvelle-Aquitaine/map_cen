@@ -76,6 +76,7 @@ class OptionsWindow(QWidget):
     def set_resolution(self, resolution):
         self.a = resolution
         MapCEN.export(self)
+        self.close()
 
 
 class MapCEN:
@@ -547,7 +548,7 @@ class MapCEN:
 
         project = QgsProject.instance()
         manager = project.layoutManager()
-        layout_name = 'Automatic layout 1'
+        layout_name = 'Mise en page automatique MapCEN'
         layouts_list = manager.printLayouts()
         # Just 4 debug
         # remove any duplicate layouts
@@ -789,7 +790,7 @@ class MapCEN:
 
     def zoom_to_layer(self):
 
-        self.layout2 = QgsProject.instance().layoutManager().layoutByName("Automatic layout 1").clone()
+        self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
         self.dlg.graphicsView.setScene(self.layout2)
 
 
@@ -806,7 +807,9 @@ class MapCEN:
         if fileName:
             dossier_sauvegarde = fileName[0]
 
-        self.layout.renderContext().setDpi(OptionsWindow.a)
+        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN')
+
+        self.layout.renderContext().setDpi(300)
 
         exporter = QgsLayoutExporter(self.layout)
         settings = QgsLayoutExporter.ImageExportSettings()

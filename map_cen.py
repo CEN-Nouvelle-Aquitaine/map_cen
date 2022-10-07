@@ -751,6 +751,7 @@ class MapCEN:
         credit_text.attemptMove(QgsLayoutPoint(200, 200, QgsUnitTypes.LayoutMillimeters))
 
 
+
         info2 = ["Source: IGN (fond de carte), IGN (Admin Express), cadastre ETALAB, FoncierCEN"]
         credit_text2 = QgsLayoutItemLabel(self.layout)
         credit_text2.setText(info2[0])

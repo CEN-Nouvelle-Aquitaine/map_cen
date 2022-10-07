@@ -11,6 +11,7 @@
         copyright            : (C) 2022 by Romain Montillet
         email                : r.montillet@cen-na.org
  ***************************************************************************/
+
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -42,17 +43,16 @@ import processing
 
 from datetime import date
 
-
 class OptionsWindow(QWidget):
     def __init__(self, parent=None):
         super(OptionsWindow, self).__init__(parent)
 
         self.setWindowTitle("Options d'export")
-        self.setMinimumSize(300, 200)
-        self.setMaximumSize(300, 200)
+        self.setMinimumSize(300,200)
+        self.setMaximumSize(300,200)
 
         titre = QLabel(self)
-        titre.setFont(QtGui.QFont("Calibri", weight=QtGui.QFont.Bold))
+        titre.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
         titre.move(70, 20)
         titre.setText("Résolution de la carte à exporter :")
         a = QPushButton("Haute résolution", self)
@@ -85,6 +85,7 @@ class MapCEN:
 
     def __init__(self, iface):
         """Constructor.
+
         :param iface: An interface instance that will be passed to this class
             which provides the hook by which you can manipulate the QGIS
             application at run time.
@@ -113,7 +114,7 @@ class MapCEN:
         self.plugin_path = os.path.dirname(__file__)
 
         # self.dlg.commandLinkButton.clicked.connect(self.actualisation_emprise)
-
+    
         #
         # liste_couches_fonciercen =[]
         #
@@ -126,6 +127,7 @@ class MapCEN:
         #
         # self.dlg.comboBox.addItems(liste_couches_fonciercen)
 
+
         self.dlg.commandLinkButton.clicked.connect(self.chargement_qpt)
 
         self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
@@ -136,7 +138,8 @@ class MapCEN:
         # self.default_project_scale = self.iface.mapCanvas().scale()
         # print("echelle par défaut à l'initilaisation du plugin", self.default_project_scale)
 
-        self.dlg.graphicsView.scale(2.1, 2.1)
+        self.dlg.graphicsView.scale(2.1,2.1)
+
 
         self.dlg.commandLinkButton_2.setEnabled(True)
         self.dlg.lineEdit.setEnabled(False)
@@ -144,55 +147,72 @@ class MapCEN:
         self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.commandLinkButton_6.setEnabled(False)
 
+
         # self.dlg.comboBox_2.setEnabled(False)
+
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
+
         We implement this ourselves since we do not inherit QObject.
+
         :param message: String for translation.
         :type message: str, QString
+
         :returns: Translated version of message.
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('MapCEN', message)
 
+
     def add_action(
-            self,
-            icon_path,
-            text,
-            callback,
-            enabled_flag=True,
-            add_to_menu=True,
-            add_to_toolbar=True,
-            status_tip=None,
-            whats_this=None,
-            parent=None):
+        self,
+        icon_path,
+        text,
+        callback,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None):
         """Add a toolbar icon to the toolbar.
+
         :param icon_path: Path to the icon for this action. Can be a resource
             path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
         :type icon_path: str
+
         :param text: Text that should be shown in menu items for this action.
         :type text: str
+
         :param callback: Function to be called when the action is triggered.
         :type callback: function
+
         :param enabled_flag: A flag indicating if the action should be enabled
             by default. Defaults to True.
         :type enabled_flag: bool
+
         :param add_to_menu: Flag indicating whether the action should also
             be added to the menu. Defaults to True.
         :type add_to_menu: bool
+
         :param add_to_toolbar: Flag indicating whether the action should also
             be added to the toolbar. Defaults to True.
         :type add_to_toolbar: bool
+
         :param status_tip: Optional text to show in a popup when mouse pointer
             hovers over the action.
         :type status_tip: str
+
         :param parent: Parent widget for the new action. Defaults None.
         :type parent: QWidget
+
         :param whats_this: Optional text to show in the status bar when the
             mouse pointer hovers over the action.
+
         :returns: The action that was created. Note that the action is also
             added to self.actions list.
         :rtype: QAction
@@ -235,6 +255,7 @@ class MapCEN:
         # will be set False in run()
         self.first_start = True
 
+
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -242,6 +263,7 @@ class MapCEN:
                 self.tr(u'&MapCEN'),
                 action)
             self.iface.removeToolBarIcon(action)
+
 
     def run(self):
         """Run method that performs all the real work"""
@@ -265,17 +287,15 @@ class MapCEN:
 
         self.dlg.commandLinkButton_2.setEnabled(False)
 
+
         managerAU = QgsApplication.authManager()
         self.k = managerAU.availableAuthMethodConfigs().keys()
         # print( k )
         if len(list(self.k)) == 0:
-            QMessageBox.question(iface.mainWindow(), u"Attention !",
-                                 "Veuillez ajouter une entrée de configuration d'authentification dans QGIS pour accéder aux flux CEN-NA sécurisés par un mot de passe",
-                                 QMessageBox.Ok)
+            QMessageBox.question(iface.mainWindow(), u"Attention !", "Veuillez ajouter une entrée de configuration d'authentification dans QGIS pour accéder aux flux CEN-NA sécurisés par un mot de passe", QMessageBox.Ok)
 
-        uri = [
-            'https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:site_gere_poly&SRSNAME=EPSG:4326&authcfg=',
-            list(self.k)[0], '&request=GetFeature']
+
+        uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:site_gere_poly&SRSNAME=EPSG:4326&authcfg=', list(self.k)[0], '&request=GetFeature']
         uri = ''.join(uri)
 
         self.listes_sites_MFU = []
@@ -296,12 +316,19 @@ class MapCEN:
         completer.setFilterMode(Qt.MatchContains)
         self.dlg.lineEdit.setCompleter(completer)
 
+
+
+
+
+
+
         project = QgsProject.instance()
 
         mises_en_page = []
 
         for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
             mises_en_page.append(filename)
+
 
         for i, filename in enumerate(mises_en_page):
             nom_fichier = os.path.basename(filename)
@@ -318,14 +345,18 @@ class MapCEN:
         #     item = QTableWidgetItem(nom_fichier)
         #     self.dlg.tableWidget.setItem(i, 0, item)
 
+
+
         self.ajout_couches()
 
     def ajout_couches(self):
 
-        # on divise niveau d'échelle par 3 lorsque le projet est vide pour compenser le zoom d'échelle * 4 dans la fonction "actualisation_emprise" (un peu à l'arrache mais bon...)
-        self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale() / 1.2)))
+        #on divise niveau d'échelle par 3 lorsque le projet est vide pour compenser le zoom d'échelle * 4 dans la fonction "actualisation_emprise" (un peu à l'arrache mais bon...)
+        self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()/1.2)))
+
 
         ### -------------------- Chargement des sites fonciercen ---------------------- ###
+
 
         # url_open = urllib.request.urlopen("https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")
         # colonnes_flux = csv.DictReader(io.TextIOWrapper(url_open, encoding='utf8'), delimiter=';')
@@ -336,9 +367,7 @@ class MapCEN:
         # uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=',nom_technique[0], '&SRSNAME=EPSG:4326&authcfg=', list(k)[0], '&request=GetFeature']
         # uri = ''.join(uri)
 
-        uri = [
-            'https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:mfu_cenna&SRSNAME=EPSG:4326&authcfg=',
-            list(self.k)[0], '&request=GetFeature']
+        uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:mfu_cenna&SRSNAME=EPSG:4326&authcfg=', list(self.k)[0], '&request=GetFeature']
         uri = ''.join(uri)
 
         # méthode plus rapide pour charger layer que QgsProject.instance().addMapLayer(layer) :
@@ -347,9 +376,7 @@ class MapCEN:
 
         if not self.layer:
             # QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charger la couche %s, veuillez contacter le pôle DSI !" % self.dlg.comboBox.currentText(), QMessageBox.Ok)
-            QMessageBox.question(iface.mainWindow(), u"Erreur !",
-                                 "Impossible de charger la couche 'Parcelles CEN NA en MFU', veuillez contacter le pôle DSI !",
-                                 QMessageBox.Ok)
+            QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charger la couche 'Parcelles CEN NA en MFU', veuillez contacter le pôle DSI !", QMessageBox.Ok)
 
         self.layer.loadNamedStyle(self.plugin_path + '/styles_couches/mfu_cenna.qml')
         self.layer.triggerRepaint()
@@ -357,9 +384,7 @@ class MapCEN:
         if not QgsProject.instance().mapLayersByName("Sites gérés CEN-NA"):
             QgsProject.instance().addMapLayer(self.vlayer)
         if not self.vlayer:
-            QMessageBox.question(iface.mainWindow(), u"Erreur !",
-                                 "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.lineEdit.text(),
-                                 QMessageBox.Ok)
+            QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.lineEdit.text(), QMessageBox.Ok)
 
         self.depts_NA = iface.addVectorLayer(
             "https://opendata.cen-nouvelle-aquitaine.org/administratif/wfs?VERSION=1.0.0&TYPENAME=administratif:departement&SRSNAME=EPSG:4326&request=GetFeature",
@@ -387,12 +412,12 @@ class MapCEN:
         self.dlg.commandLinkButton_5.setEnabled(True)
         self.dlg.commandLinkButton_6.setEnabled(True)
 
+
     def actualisation_emprise(self):
-
+    
         if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
-            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide",
-                                 "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
-
+            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+            
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
 
         if self.dlg.radioButton.isChecked() == True:
@@ -406,10 +431,11 @@ class MapCEN:
 
             fond_carte = QgsProject.instance().mapLayersByName("Google Sat'")[0]
 
-        else:
+        else :
             for lyr in QgsProject.instance().mapLayers().values():
                 if lyr.name() == "Google Sat'":
                     QgsProject.instance().removeMapLayers([lyr.id()])
+
 
         if self.dlg.radioButton_2.isChecked() == True:
 
@@ -423,10 +449,11 @@ class MapCEN:
 
             fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
 
-        else:
+        else :
             for lyr in QgsProject.instance().mapLayers().values():
                 if lyr.name() == "OSM":
                     QgsProject.instance().removeMapLayers([lyr.id()])
+
 
         if self.dlg.radioButton_3.isChecked() == True:
 
@@ -440,10 +467,11 @@ class MapCEN:
 
             fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
 
-        else:
+        else :
             for lyr in QgsProject.instance().mapLayers().values():
                 if lyr.name() == "SCAN25 IGN":
                     QgsProject.instance().removeMapLayers([lyr.id()])
+
 
         # Ordre des couches dans gestionnaires couches : fond de carte sous les autres couches
         root = QgsProject.instance().layerTreeRoot()
@@ -452,6 +480,7 @@ class MapCEN:
         parent = fond_carte.parent()
         parent.insertChildNode(-1, myClone)
         parent.removeChildNode(fond_carte)
+
 
         # ### Zoom sur emprise du site CEN selectionné:
 
@@ -464,7 +493,7 @@ class MapCEN:
             QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
 
             ##On change légèrement l'échelle de visualisation du project en la diminuant légèrement car sinon zoom trop important lorsque zoomtoextent(layer) dans composeur d'impression
-            self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale() * 1.2)))
+            self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()*1.2)))
 
             rules = (
                 ('Site CEN sélectionné', "is_selected()", 'red'),
@@ -510,10 +539,11 @@ class MapCEN:
             self.mise_en_page()
 
         else:
-            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide",
-                                 "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+
 
     def mise_en_page(self):
+
 
         # ajout de la date, l'auteur, source etc...
         date_du_jour = date.today().strftime("%d/%m/%Y")
@@ -547,6 +577,7 @@ class MapCEN:
         # manager.addLayout(layout)
         self.layout.setName(layout_name)
 
+
         ## Add map to layout
         print("Adding map")
         self.my_map1 = QgsLayoutItemMap(self.layout)
@@ -556,13 +587,14 @@ class MapCEN:
 
         self.my_map1.setLayers([self.layer, self.fond])
 
+
         # Mettre le canvas courant comme emprise
         self.my_map1.setExtent(iface.mapCanvas().extent())
 
         # Position de la carte dans le composeur
         self.my_map1.attemptMove(QgsLayoutPoint(5, 23, QgsUnitTypes.LayoutMillimeters))
 
-        # on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
+        #on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
         self.my_map1.attemptResize(QgsLayoutSize(185, 182, QgsUnitTypes.LayoutMillimeters))
 
         self.my_map1.refresh()
@@ -595,6 +627,7 @@ class MapCEN:
         # forward transformation: src -> dest
         extent = xform.transform(self.depts_NA.extent())
 
+
         my_map2.setExtent(extent)
         my_map2.setScale(30000000)
 
@@ -602,6 +635,7 @@ class MapCEN:
         my_map2.attemptResize(QgsLayoutSize(63, 63, QgsUnitTypes.LayoutMillimeters))
 
         self.layout.addLayoutItem(my_map2)
+
 
         ## Ajout de la legende :
         print((u"Adding legend"))
@@ -633,6 +667,7 @@ class MapCEN:
         legend.setEqualColumnWidth(True)
         legend.setSplitLayer(True)
 
+
         # for legendLyr in iface.mapCanvas().layers():
         #     if legendLyr.name() == "Parcelles CEN NA en MFU":
         #         renderer = legendLyr.renderer()
@@ -648,6 +683,7 @@ class MapCEN:
         #         legendLyr.setRenderer(myRenderer)
         #         legendLyr.triggerRepaint()
 
+
         legend.setWrapString("*")
 
         # layer_to_remove = QgsProject().instance().mapLayersByName("Google Sat'")[0]
@@ -658,17 +694,19 @@ class MapCEN:
 
         self.layout.refresh()
 
+
+
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][
-                                                      :2] + ")" + " : MFU au " + date_du_jour)
+        titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")" + " : MFU au " + date_du_jour)
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.adjustSizeToText()
         title.attemptMove(QgsLayoutPoint(4.2, 5.8, QgsUnitTypes.LayoutMillimeters))
         title.adjustSizeToText()
         self.layout.addItem(title)
+
 
         ## Ajout du logo CEN NA en haut à gauche de la page
         layoutItemPicture = QgsLayoutItemPicture(self.layout)
@@ -679,9 +717,10 @@ class MapCEN:
         # dim_image_original = [250, 84]
         # new_dim = [i * 0.15 for i in dim_image_original]
         layoutItemPicture.attemptMove(QgsLayoutPoint(218, 5, QgsUnitTypes.LayoutMillimeters))
-        layoutItemPicture.attemptResize(QgsLayoutSize(720, 249, QgsUnitTypes.LayoutPixels))
+        layoutItemPicture.attemptResize(QgsLayoutSize(720,249, QgsUnitTypes.LayoutPixels))
 
         self.layout.addLayoutItem(layoutItemPicture)
+
 
         ## Ajout de l'échelle à la mise en page
         print((u"Adding scale bar"))
@@ -693,6 +732,7 @@ class MapCEN:
 
         scalebar.setNumberOfSegments(2)
         scalebar.setNumberOfSegmentsLeft(0)
+
 
         print(self.my_map1.scale())
 
@@ -722,7 +762,7 @@ class MapCEN:
 
         scalebar.update()
         self.layout.addLayoutItem(scalebar)
-        scalebar.attemptMove(QgsLayoutPoint(226, 173, QgsUnitTypes.LayoutMillimeters))
+        scalebar.attemptMove(QgsLayoutPoint(226,173, QgsUnitTypes.LayoutMillimeters))
         scalebar.setFixedSize(QgsLayoutSize(50, 15))
 
         # ajout de la fleche du Nord
@@ -731,7 +771,9 @@ class MapCEN:
         north.setPicturePath(self.plugin_path + "/NorthArrow_02.svg")
         self.layout.addLayoutItem(north)
         north.attemptResize(QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters))
-        north.attemptMove(QgsLayoutPoint(208, 172, QgsUnitTypes.LayoutMillimeters))
+        north.attemptMove(QgsLayoutPoint(208,172, QgsUnitTypes.LayoutMillimeters))
+
+
 
         info = ["Réalisation : " + "DSI / CEN Nouvelle-Aquitaine (" + date_du_jour + ")"]
         credit_text = QgsLayoutItemLabel(self.layout)
@@ -740,6 +782,7 @@ class MapCEN:
         credit_text.adjustSizeToText()
         self.layout.addLayoutItem(credit_text)
         credit_text.attemptMove(QgsLayoutPoint(200, 200, QgsUnitTypes.LayoutMillimeters))
+
 
         info2 = ["Source: IGN (fond de carte), IGN (Admin Express), cadastre ETALAB, FoncierCEN"]
         credit_text2 = QgsLayoutItemLabel(self.layout)
@@ -750,8 +793,9 @@ class MapCEN:
         self.layout.addLayoutItem(credit_text2)
         credit_text2.attemptMove(QgsLayoutPoint(191, 204, QgsUnitTypes.LayoutMillimeters))
 
+
         surf_parcelles_site_selectionne = self.layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
-        surf_ha = surf_parcelles_site_selectionne[0] / 10000
+        surf_ha = surf_parcelles_site_selectionne[0]/10000
         info3 = "Surface totale maîtrisée sur le site : " + str(surf_ha) + " ha."
         credit_text3 = QgsLayoutItemLabel(self.layout)
         credit_text3.setText(info3)
@@ -760,10 +804,12 @@ class MapCEN:
         self.layout.addLayoutItem(credit_text3)
         credit_text3.attemptMove(QgsLayoutPoint(10.5, 13.5, QgsUnitTypes.LayoutMillimeters))
 
+
         # Finally add layout to the project via its manager
         manager.addLayout(self.layout)
 
         self.zoom_to_layer()
+
 
     def ouverture_composeur(self):
 
@@ -774,15 +820,19 @@ class MapCEN:
         #### Pour ajouter deuxieme carte au composer d'impression:
         ##https://gis.stackexchange.com/questions/331723/display-two-different-maps-with-different-layers-in-one-layout-in-pyqgis-proble
 
+
     def zoom_to_layer(self):
 
         self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
         self.dlg.graphicsView.setScene(self.layout2)
 
+
+
     def popup(self):
 
         self.dialog = OptionsWindow()  # +++ - self
         self.dialog.show()
+
 
     def export(self):
 
@@ -797,9 +847,12 @@ class MapCEN:
         exporter = QgsLayoutExporter(self.layout)
         settings = QgsLayoutExporter.ImageExportSettings()
 
+
         result_png = exporter.exportToImage(dossier_sauvegarde, settings)
 
         # print(result_png)  # 0 = export réussi !
+
+
 
     def chargement_qpt(self):
 
@@ -888,6 +941,7 @@ class MapCEN:
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)
 
+
                 if layout.name() == "Modèle_mep_carto_CEN_NA_A4_portrait_simple.qpt":
                     ## Ajout d'un titre à la mise en page
                     title = QgsLayoutItemLabel(layout)
@@ -913,6 +967,8 @@ class MapCEN:
 
                 project.layoutManager().addLayout(layout)
 
+
+
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 
         layout2 = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
@@ -921,3 +977,5 @@ class MapCEN:
         map_item.zoomToExtent(iface.mapCanvas().extent())
         #
         iface.openLayoutDesigner(layout2)
+
+

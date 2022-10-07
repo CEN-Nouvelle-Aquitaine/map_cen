@@ -25,6 +25,7 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from PyQt5 import *
+from PyQt5.QtCore import Qt
 
 from qgis.core import *
 from qgis.gui import *
@@ -42,20 +43,42 @@ import processing
 
 from datetime import date
 
-class Calcul(QThread):
-    # crée un nouveau signal pour indiquer la fin du thread
-    finduthread = pyqtSignal()
-
-    # ========================================================================
+class OptionsWindow(QWidget):
     def __init__(self, parent=None):
-        super(Calcul, self).__init__(parent)
+        super(OptionsWindow, self).__init__(parent)
 
-    # ========================================================================
-    def run(self):
-        # tempo de 5 secondes pour l'exemple
-        time.sleep(5)
-        # émet le signal de fin du thread
-        self.finduthread.emit()
+        self.setWindowTitle("Options d'export")
+        self.setMinimumSize(300,200)
+        self.setMaximumSize(300,200)
+
+        titre = QLabel(self)
+        titre.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
+        titre.move(70, 20)
+        titre.setText("Résolution de la carte à exporter :")
+        a = QPushButton("Haute résolution", self)
+        a.move(90, 50)
+        a.setMinimumSize(120, 25)
+        a.setMaximumSize(120, 25)
+        b = QPushButton("Moyenne résolution", self)
+        b.move(90, 90)
+        b.setMinimumSize(120, 25)
+        b.setMaximumSize(120, 25)
+        c = QPushButton("Basse résolution", self)
+        c.move(90, 130)
+        c.setMinimumSize(120, 25)
+        c.setMaximumSize(120, 25)
+
+        a.clicked.connect(lambda: self.set_resolution(300))
+        b.clicked.connect(lambda: self.set_resolution(200))
+        c.clicked.connect(lambda: self.set_resolution(100))
+
+        # OptionsWindow().exec_()
+
+    def set_resolution(self, resolution):
+        self.a = resolution
+        MapCEN.export(self)
+        self.close()
+
 
 class MapCEN:
     """QGIS Plugin Implementation."""
@@ -110,7 +133,7 @@ class MapCEN:
         self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
         self.dlg.commandLinkButton_4.clicked.connect(self.actualisation_emprise)
         self.dlg.commandLinkButton_5.clicked.connect(self.ouverture_composeur)
-        self.dlg.commandLinkButton_6.clicked.connect(self.export)
+        self.dlg.commandLinkButton_6.clicked.connect(self.popup)
 
         # self.default_project_scale = self.iface.mapCanvas().scale()
         # print("echelle par défaut à l'initilaisation du plugin", self.default_project_scale)
@@ -290,6 +313,7 @@ class MapCEN:
 
         completer = QCompleter(self.listes_sites_MFU)
         completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchContains)
         self.dlg.lineEdit.setCompleter(completer)
 
 
@@ -308,7 +332,6 @@ class MapCEN:
 
         for i, filename in enumerate(mises_en_page):
             nom_fichier = os.path.basename(filename)
-            print(nom_fichier)
             self.dlg.comboBox.addItem(nom_fichier)
 
         # self.dlg.tableWidget.setRowCount(len(mises_en_page))
@@ -392,7 +415,7 @@ class MapCEN:
 
     def actualisation_emprise(self):
     
-        if self.dlg.lineEdit.text() not in listes_sites_MFU:
+        if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
             QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
             
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
@@ -521,13 +544,17 @@ class MapCEN:
 
     def mise_en_page(self):
 
+
+        # ajout de la date, l'auteur, source etc...
+        date_du_jour = date.today().strftime("%d/%m/%Y")
+
         # QgsProject.instance().layerTreeRoot().findLayer(self.vlayer.id()).setItemVisibilityChecked(False)
 
         ## Ajout de la mise en page au composeur de carte:
 
         project = QgsProject.instance()
         manager = project.layoutManager()
-        layout_name = 'Automatic layout 1'
+        layout_name = 'Mise en page automatique MapCEN'
         layouts_list = manager.printLayouts()
         # Just 4 debug
         # remove any duplicate layouts
@@ -672,7 +699,7 @@ class MapCEN:
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str("Maîtrise foncière sur le site : " + self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"] + ")")
+        titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")" + " : MFU au " + date_du_jour)
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.adjustSizeToText()
@@ -685,7 +712,7 @@ class MapCEN:
         layoutItemPicture = QgsLayoutItemPicture(self.layout)
         layoutItemPicture.setResizeMode(QgsLayoutItemPicture.Zoom)
         layoutItemPicture.setMode(QgsLayoutItemPicture.FormatRaster)
-        layoutItemPicture.setPicturePath(self.plugin_path + '/logo_cenna.jpg')
+        layoutItemPicture.setPicturePath(self.plugin_path + '/logo.jpg')
 
         # dim_image_original = [250, 84]
         # new_dim = [i * 0.15 for i in dim_image_original]
@@ -702,13 +729,41 @@ class MapCEN:
         scalebar.setLinkedMap(self.my_map1)
         scalebar.applyDefaultSize()
         scalebar.applyDefaultSettings()
-        scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
-        scalebar.setUnitsPerSegment(scalebar.unitsPerSegment() / 1000)
-        scalebar.setUnitLabel('km')
+
+        scalebar.setNumberOfSegments(2)
+        scalebar.setNumberOfSegmentsLeft(0)
+
+
+        print(self.my_map1.scale())
+
+        if self.my_map1.scale() >= 70000:
+
+            scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
+            scalebar.setUnitLabel("km")
+            scalebar.setUnitsPerSegment(1)
+
+        elif self.my_map1.scale() >= 50000:
+
+            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
+            scalebar.setUnitLabel("m")
+            scalebar.setUnitsPerSegment(500)
+
+        elif self.my_map1.scale() >= 10000:
+
+            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
+            scalebar.setUnitLabel("m")
+            scalebar.setUnitsPerSegment(250)
+
+        else:
+
+            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 0: meter
+            scalebar.setUnitLabel("m")
+            scalebar.setUnitsPerSegment(100)
+
         scalebar.update()
         self.layout.addLayoutItem(scalebar)
         scalebar.attemptMove(QgsLayoutPoint(226,173, QgsUnitTypes.LayoutMillimeters))
-        # scalebar.setFixedSize(QgsLayoutSize(50, 20))
+        scalebar.setFixedSize(QgsLayoutSize(50, 15))
 
         # ajout de la fleche du Nord
         print((u"Add north arrow"))
@@ -718,8 +773,7 @@ class MapCEN:
         north.attemptResize(QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters))
         north.attemptMove(QgsLayoutPoint(208,172, QgsUnitTypes.LayoutMillimeters))
 
-        # ajout de la date, l'auteur, source etc...
-        date_du_jour = date.today().strftime("%d/%m/%Y")
+
 
         info = ["Réalisation : " + "DSI / CEN Nouvelle-Aquitaine (" + date_du_jour + ")"]
         credit_text = QgsLayoutItemLabel(self.layout)
@@ -769,33 +823,35 @@ class MapCEN:
 
     def zoom_to_layer(self):
 
-        self.layout2 = QgsProject.instance().layoutManager().layoutByName("Automatic layout 1").clone()
+        self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
         self.dlg.graphicsView.setScene(self.layout2)
+
+
+
+    def popup(self):
+
+        self.dialog = OptionsWindow()  # +++ - self
+        self.dialog.show()
 
 
     def export(self):
 
-        # dossier_sauvegarde = QFileDialog.getExistingDirectory()
-        #
-        # exporter.exportToPdf(f'"{dossier_sauvegarde}/"'), QgsLayoutExporter.PdfExportSettings())
-
-
-        fileName = QFileDialog.getSaveFileName(None, 'Sauvegarder en png', '', filter='*.png')
+        fileName = QFileDialog.getSaveFileName(None, 'Sauvegarder en jpg', '', filter='*.jpg')
         if fileName:
             dossier_sauvegarde = fileName[0]
 
+        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN')
+
+        self.layout.renderContext().setDpi(300)
+
         exporter = QgsLayoutExporter(self.layout)
         settings = QgsLayoutExporter.ImageExportSettings()
-        # The idea is that here you can change setting attributes e.g :
-        # settings.cropToContents = True
-        # settings.dpi = 150
+
 
         result_png = exporter.exportToImage(dossier_sauvegarde, settings)
-        print(result_png)  # 0 = Export was successful!
 
+        # print(result_png)  # 0 = export réussi !
 
-        # result_pdf = exporter.exportToPdf(dossier_sauvegarde, QgsLayoutExporter.PdfExportSettings())
-        # print(result_pdf) # 0 = Export was successful!
 
 
     def chargement_qpt(self):
@@ -816,7 +872,102 @@ class MapCEN:
                 layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
                 layout.setName(os.path.basename(filename))
 
+                if layout.name() == "Modèle_mep_carto_CEN_NA_A3_paysage_simple.qpt":
+                    ## Ajout d'un titre à la mise en page
+                    title = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(title)
+                    titre = self.dlg.lineEdit_2.text()
+                    title.setText(titre)
+                    title.setFont(QFont("Calibri", 20))
+                    title.adjustSizeToText()
+                    title.attemptMove(QgsLayoutPoint(182, 5, QgsUnitTypes.LayoutMillimeters))
+                    title.adjustSizeToText()
+                    layout.addItem(title)
+
+                    ## Ajout d'un sous titre à la mise en page
+                    subtitle = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(subtitle)
+                    titre = self.dlg.lineEdit_3.text()
+                    subtitle.setText(titre)
+                    subtitle.setFont(QFont("Calibri", 16))
+                    subtitle.adjustSizeToText()
+                    subtitle.attemptMove(QgsLayoutPoint(182, 18, QgsUnitTypes.LayoutMillimeters))
+                    subtitle.adjustSizeToText()
+                    layout.addItem(subtitle)
+
+                if layout.name() == "Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
+                    ## Ajout d'un titre à la mise en page
+                    title = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(title)
+                    titre = self.dlg.lineEdit_2.text()
+                    title.setText(titre)
+                    title.setFont(QFont("Calibri", 20))
+                    title.adjustSizeToText()
+                    title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
+                    title.adjustSizeToText()
+                    layout.addItem(title)
+
+                    ## Ajout d'un sous titre à la mise en page
+                    subtitle = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(subtitle)
+                    titre = self.dlg.lineEdit_3.text()
+                    subtitle.setText(titre)
+                    subtitle.setFont(QFont("Calibri", 16))
+                    subtitle.adjustSizeToText()
+                    subtitle.attemptMove(QgsLayoutPoint(120, 22, QgsUnitTypes.LayoutMillimeters))
+                    subtitle.adjustSizeToText()
+                    layout.addItem(subtitle)
+
+                if layout.name() == "Modèle_mep_carto_CEN_NA_A4_paysage_simple.qpt":
+                    ## Ajout d'un titre à la mise en page
+                    title = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(title)
+                    titre = self.dlg.lineEdit_2.text()
+                    title.setText(titre)
+                    title.setFont(QFont("Calibri", 20))
+                    title.adjustSizeToText()
+                    title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
+                    title.adjustSizeToText()
+                    layout.addItem(title)
+
+                    ## Ajout d'un sous titre à la mise en page
+                    subtitle = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(subtitle)
+                    titre = self.dlg.lineEdit_3.text()
+                    subtitle.setText(titre)
+                    subtitle.setFont(QFont("Calibri", 16))
+                    subtitle.adjustSizeToText()
+                    subtitle.attemptMove(QgsLayoutPoint(120, 15, QgsUnitTypes.LayoutMillimeters))
+                    subtitle.adjustSizeToText()
+                    layout.addItem(subtitle)
+
+
+                if layout.name() == "Modèle_mep_carto_CEN_NA_A4_portrait_simple.qpt":
+                    ## Ajout d'un titre à la mise en page
+                    title = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(title)
+                    titre = self.dlg.lineEdit_2.text()
+                    title.setText(titre)
+                    title.setFont(QFont("Calibri", 20))
+                    title.adjustSizeToText()
+                    title.attemptMove(QgsLayoutPoint(76, 5, QgsUnitTypes.LayoutMillimeters))
+                    title.adjustSizeToText()
+                    layout.addItem(title)
+
+                    ## Ajout d'un sous titre à la mise en page
+                    subtitle = QgsLayoutItemLabel(layout)
+                    layout.addLayoutItem(subtitle)
+                    titre = self.dlg.lineEdit_3.text()
+                    subtitle.setText(titre)
+                    subtitle.setFont(QFont("Calibri", 16))
+                    subtitle.adjustSizeToText()
+                    subtitle.attemptMove(QgsLayoutPoint(76, 17, QgsUnitTypes.LayoutMillimeters))
+                    subtitle.adjustSizeToText()
+                    layout.addItem(subtitle)
+
                 project.layoutManager().addLayout(layout)
+
+
 
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 
@@ -826,6 +977,5 @@ class MapCEN:
         map_item.zoomToExtent(iface.mapCanvas().extent())
         #
         iface.openLayoutDesigner(layout2)
-
 
 

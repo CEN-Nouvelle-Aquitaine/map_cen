@@ -736,29 +736,35 @@ class MapCEN:
 
         print(self.my_map1.scale())
 
-        if self.my_map1.scale() >= 70000:
+        if self.my_map1.scale() >= 45000:
+            scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
+            scalebar.setUnitLabel("km")
+            scalebar.setUnitsPerSegment(1.5)
 
+        elif self.my_map1.scale() >= 30000:
             scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
             scalebar.setUnitLabel("km")
             scalebar.setUnitsPerSegment(1)
 
-        elif self.my_map1.scale() >= 50000:
+        elif self.my_map1.scale() >= 20000:
+            scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
+            scalebar.setUnitLabel("km")
+            scalebar.setUnitsPerSegment(0.5)
 
-            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
-            scalebar.setUnitLabel("m")
-            scalebar.setUnitsPerSegment(500)
-
-        elif self.my_map1.scale() >= 10000:
-
+        elif self.my_map1.scale() >= 9000:
             scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
             scalebar.setUnitLabel("m")
             scalebar.setUnitsPerSegment(250)
 
-        else:
-
-            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 0: meter
+        elif self.my_map1.scale() >= 5000:
+            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
             scalebar.setUnitLabel("m")
             scalebar.setUnitsPerSegment(100)
+
+        else:
+            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 0: meter
+            scalebar.setUnitLabel("m")
+            scalebar.setUnitsPerSegment(50)
 
         scalebar.update()
         self.layout.addLayoutItem(scalebar)

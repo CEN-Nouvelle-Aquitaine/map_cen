@@ -421,19 +421,20 @@ class MapCEN:
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
 
         if self.dlg.radioButton.isChecked() == True:
-            tms = 'type=xyz&zmin=0&zmax=20&url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D{x}%26y%3D{y}%26z%3D{z}'
-            self.fond = QgsRasterLayer(tms, "Google Sat'", 'wms')
+            uri = "url=https://wxs.ign.fr/ortho/geoportail/r/wms&service=WMS+Raster&version=1.3.0&crs=EPSG:2154&format=image/png&layers=HR.ORTHOIMAGERY.ORTHOPHOTOS&styles"
+            # tms = 'type=xyz&zmin=0&zmax=20&url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D{x}%26y%3D{y}%26z%3D{z}'
+            self.fond = QgsRasterLayer(uri, "Fond ortho IGN 2021", 'wms')
 
             if not QgsProject.instance().mapLayersByName("Google Sat'"):
                 QgsProject.instance().addMapLayer(self.fond)
             else:
-                print("Le fond de carte Google Sat' est déjà chargé")
+                print("Le fond de carte 'Fond ortho IGN 2021' est déjà chargé")
 
-            fond_carte = QgsProject.instance().mapLayersByName("Google Sat'")[0]
+            fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
 
         else :
             for lyr in QgsProject.instance().mapLayers().values():
-                if lyr.name() == "Google Sat'":
+                if lyr.name() == "Fond ortho IGN 2021":
                     QgsProject.instance().removeMapLayers([lyr.id()])
 
 
@@ -889,6 +890,10 @@ class MapCEN:
                     title.attemptMove(QgsLayoutPoint(182, 5, QgsUnitTypes.LayoutMillimeters))
                     title.adjustSizeToText()
                     layout.addItem(title)
+                    title.setHAlign(Qt.AlignCenter)
+                    title.setVAlign(Qt.AlignVCenter)
+                    print(title.hAlign())
+                    title.setHAlign(160)
 
                     ## Ajout d'un sous titre à la mise en page
                     subtitle = QgsLayoutItemLabel(layout)

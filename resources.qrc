@@ -9,6 +9,10 @@
 		<file>checked.png</file>
 		<file>jpg.png</file>
 		<file>loading2.gif</file>
+		<file>zoom.png</file>
+		<file>zoom_out.png</file>
 		<file>logo.jpg</file>
+		<file>underconstruction.gif</file>
+		<file>onglet.png</file>
    </qresource>
 </RCC>

@@ -36,10 +36,6 @@ from .resources import *
 # Import the code for the dialog
 from .map_cen_dialog import MapCENDialog
 import os.path
-import urllib
-import csv
-import io
-import processing
 
 from datetime import date
 
@@ -114,7 +110,7 @@ class MapCEN:
         self.plugin_path = os.path.dirname(__file__)
 
         # self.dlg.commandLinkButton.clicked.connect(self.actualisation_emprise)
-    
+
         #
         # liste_couches_fonciercen =[]
         #
@@ -139,18 +135,22 @@ class MapCEN:
         # print("echelle par défaut à l'initilaisation du plugin", self.default_project_scale)
 
         self.dlg.graphicsView.scale(2.1,2.1)
-
+        self.dlg.graphicsView.setMouseTracking(True)
 
         self.dlg.commandLinkButton_2.setEnabled(True)
         self.dlg.lineEdit.setEnabled(False)
         self.dlg.commandLinkButton_4.setEnabled(False)
         self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.commandLinkButton_6.setEnabled(False)
+        self.dlg.horizontalSlider.valueChanged.connect(self.test)
 
-
+        self.dlg.setMouseTracking(True)
         # self.dlg.comboBox_2.setEnabled(False)
 
-
+        self.movie = QMovie(
+            str(self.plugin_path) + "/underconstruction.gif")  # récupération du gif via le chemin relatif du plugin
+        self.dlg.label_11.setMovie(self.movie)
+        self.movie.start()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -351,10 +351,6 @@ class MapCEN:
 
     def ajout_couches(self):
 
-        #on divise niveau d'échelle par 3 lorsque le projet est vide pour compenser le zoom d'échelle * 4 dans la fonction "actualisation_emprise" (un peu à l'arrache mais bon...)
-        self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()/1.2)))
-
-
         ### -------------------- Chargement des sites fonciercen ---------------------- ###
 
 
@@ -414,10 +410,10 @@ class MapCEN:
 
 
     def actualisation_emprise(self):
-    
+
         if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
             QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
-            
+
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
 
         if self.dlg.radioButton.isChecked() == True:
@@ -425,7 +421,7 @@ class MapCEN:
             # tms = 'type=xyz&zmin=0&zmax=20&url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D{x}%26y%3D{y}%26z%3D{z}'
             self.fond = QgsRasterLayer(uri, "Fond ortho IGN 2021", 'wms')
 
-            if not QgsProject.instance().mapLayersByName("Google Sat'"):
+            if not QgsProject.instance().mapLayersByName("Fond ortho IGN 2021"):
                 QgsProject.instance().addMapLayer(self.fond)
             else:
                 print("Le fond de carte 'Fond ortho IGN 2021' est déjà chargé")
@@ -446,7 +442,7 @@ class MapCEN:
             if not QgsProject.instance().mapLayersByName("OSM"):
                 QgsProject.instance().addMapLayer(self.fond)
             else:
-                print("Le fond de carte Google Sat' est déjà chargé")
+                print("Le fond de carte OSM est déjà chargé")
 
             fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
 
@@ -494,7 +490,7 @@ class MapCEN:
             QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
 
             ##On change légèrement l'échelle de visualisation du project en la diminuant légèrement car sinon zoom trop important lorsque zoomtoextent(layer) dans composeur d'impression
-            self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()*1.2)))
+            # self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()*1.2)))
 
             rules = (
                 ('Site CEN sélectionné', "is_selected()", 'red'),
@@ -545,6 +541,7 @@ class MapCEN:
 
     def mise_en_page(self):
 
+        self.dlg.horizontalSlider.setValue(0)
 
         # ajout de la date, l'auteur, source etc...
         date_du_jour = date.today().strftime("%d/%m/%Y")
@@ -554,14 +551,14 @@ class MapCEN:
         ## Ajout de la mise en page au composeur de carte:
 
         project = QgsProject.instance()
-        manager = project.layoutManager()
+        self.manager = project.layoutManager()
         layout_name = 'Mise en page automatique MapCEN'
-        layouts_list = manager.printLayouts()
+        layouts_list = self.manager.printLayouts()
         # Just 4 debug
         # remove any duplicate layouts
         for self.layout in layouts_list:
             if self.layout.name() == layout_name:
-                manager.removeLayout(self.layout)
+                self.manager.removeLayout(self.layout)
             #     reply = QMessageBox.question(None, (u'Delete layout...'),
             #                                  (
             #                                      u"There's already a layout named '%s'\nDo you want to delete it?")
@@ -597,7 +594,6 @@ class MapCEN:
 
         #on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
         self.my_map1.attemptResize(QgsLayoutSize(185, 182, QgsUnitTypes.LayoutMillimeters))
-
         self.my_map1.refresh()
 
         self.my_map1.setBackgroundColor(QColor(255, 255, 255, 255))
@@ -660,7 +656,7 @@ class MapCEN:
         layer_to_remove = self.fond
         legend.model().rootGroup().removeLayer(layer_to_remove)
 
-        legend.attemptMove(QgsLayoutPoint(200, 93, QgsUnitTypes.LayoutMillimeters))
+        legend.attemptMove(QgsLayoutPoint(200, 99, QgsUnitTypes.LayoutMillimeters))
 
         # legend.setColumnCount(3)
 
@@ -700,7 +696,7 @@ class MapCEN:
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")" + " : MFU au " + date_du_jour)
+        titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.adjustSizeToText()
@@ -709,11 +705,24 @@ class MapCEN:
         self.layout.addItem(title)
 
 
+        ## Ajout d'un sous-titre à la mise en page
+        subtitle = QgsLayoutItemLabel(self.layout)
+        self.layout.addLayoutItem(subtitle)
+        titre = str("Maîtrise foncière ou d'usage au " + date_du_jour)
+        subtitle.setText(titre)
+        subtitle.setFont(QFont("Calibri", 14))
+        subtitle.adjustSizeToText()
+        subtitle.attemptMove(QgsLayoutPoint(10.5, 13.5, QgsUnitTypes.LayoutMillimeters))
+        subtitle.adjustSizeToText()
+        self.layout.addItem(subtitle)
+
+
         ## Ajout du logo CEN NA en haut à gauche de la page
         layoutItemPicture = QgsLayoutItemPicture(self.layout)
         layoutItemPicture.setResizeMode(QgsLayoutItemPicture.Zoom)
         layoutItemPicture.setMode(QgsLayoutItemPicture.FormatRaster)
         layoutItemPicture.setPicturePath(self.plugin_path + '/logo.jpg')
+
 
         # dim_image_original = [250, 84]
         # new_dim = [i * 0.15 for i in dim_image_original]
@@ -725,52 +734,19 @@ class MapCEN:
 
         ## Ajout de l'échelle à la mise en page
         print((u"Adding scale bar"))
-        scalebar = QgsLayoutItemScaleBar(self.layout)
-        scalebar.setStyle('Single Box')
-        scalebar.setLinkedMap(self.my_map1)
-        scalebar.applyDefaultSize()
-        scalebar.applyDefaultSettings()
+        self.scalebar = QgsLayoutItemScaleBar(self.layout)
+        self.scalebar.setStyle('Single Box')
+        self.scalebar.setLinkedMap(self.my_map1)
+        self.scalebar.applyDefaultSize()
+        self.scalebar.applyDefaultSettings()
 
-        scalebar.setNumberOfSegments(2)
-        scalebar.setNumberOfSegmentsLeft(0)
+        self.scalebar.setNumberOfSegments(2)
+        self.scalebar.setNumberOfSegmentsLeft(0)
 
+        self.layout.addLayoutItem(self.scalebar)
+        self.scalebar.attemptMove(QgsLayoutPoint(222,173, QgsUnitTypes.LayoutMillimeters))
+        self.scalebar.setFixedSize(QgsLayoutSize(50, 15))
 
-        print(self.my_map1.scale())
-
-        if self.my_map1.scale() >= 45000:
-            scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
-            scalebar.setUnitLabel("km")
-            scalebar.setUnitsPerSegment(1.5)
-
-        elif self.my_map1.scale() >= 30000:
-            scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
-            scalebar.setUnitLabel("km")
-            scalebar.setUnitsPerSegment(1)
-
-        elif self.my_map1.scale() >= 20000:
-            scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
-            scalebar.setUnitLabel("km")
-            scalebar.setUnitsPerSegment(0.5)
-
-        elif self.my_map1.scale() >= 9000:
-            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
-            scalebar.setUnitLabel("m")
-            scalebar.setUnitsPerSegment(250)
-
-        elif self.my_map1.scale() >= 5000:
-            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
-            scalebar.setUnitLabel("m")
-            scalebar.setUnitsPerSegment(100)
-
-        else:
-            scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 0: meter
-            scalebar.setUnitLabel("m")
-            scalebar.setUnitsPerSegment(50)
-
-        scalebar.update()
-        self.layout.addLayoutItem(scalebar)
-        scalebar.attemptMove(QgsLayoutPoint(226,173, QgsUnitTypes.LayoutMillimeters))
-        scalebar.setFixedSize(QgsLayoutSize(50, 15))
 
         # ajout de la fleche du Nord
         print((u"Add north arrow"))
@@ -778,7 +754,7 @@ class MapCEN:
         north.setPicturePath(self.plugin_path + "/NorthArrow_02.svg")
         self.layout.addLayoutItem(north)
         north.attemptResize(QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters))
-        north.attemptMove(QgsLayoutPoint(208,172, QgsUnitTypes.LayoutMillimeters))
+        north.attemptMove(QgsLayoutPoint(205,172, QgsUnitTypes.LayoutMillimeters))
 
 
 
@@ -789,6 +765,7 @@ class MapCEN:
         credit_text.adjustSizeToText()
         self.layout.addLayoutItem(credit_text)
         credit_text.attemptMove(QgsLayoutPoint(200, 200, QgsUnitTypes.LayoutMillimeters))
+        credit_text.attemptResize(QgsLayoutSize(95, 5, QgsUnitTypes.LayoutMillimeters))
 
 
         info2 = ["Source: IGN (fond de carte), IGN (Admin Express), cadastre ETALAB, FoncierCEN"]
@@ -799,6 +776,7 @@ class MapCEN:
         credit_text2.adjustSizeToText()
         self.layout.addLayoutItem(credit_text2)
         credit_text2.attemptMove(QgsLayoutPoint(191, 204, QgsUnitTypes.LayoutMillimeters))
+        credit_text2.attemptResize(QgsLayoutSize(150, 4, QgsUnitTypes.LayoutMillimeters))
 
 
         surf_parcelles_site_selectionne = self.layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
@@ -806,17 +784,58 @@ class MapCEN:
         info3 = "Surface totale maîtrisée sur le site : " + str(surf_ha) + " ha."
         credit_text3 = QgsLayoutItemLabel(self.layout)
         credit_text3.setText(info3)
-        credit_text3.setFont(QFont("Calibri", 14))
+        credit_text3.setFont(QFont("Calibri", 12, italic=True))
         credit_text3.adjustSizeToText()
         self.layout.addLayoutItem(credit_text3)
-        credit_text3.attemptMove(QgsLayoutPoint(10.5, 13.5, QgsUnitTypes.LayoutMillimeters))
+        credit_text3.attemptMove(QgsLayoutPoint(205, 92, QgsUnitTypes.LayoutMillimeters))
+        credit_text3.attemptResize(QgsLayoutSize(90, 8, QgsUnitTypes.LayoutMillimeters))
+
 
 
         # Finally add layout to the project via its manager
-        manager.addLayout(self.layout)
+        self.manager.addLayout(self.layout)
 
         self.zoom_to_layer()
 
+        self.echelle = self.my_map1.scale()
+
+        self.bar_echelle_auto()
+
+    def bar_echelle_auto(self):
+
+        print(self.my_map1.scale())
+
+        if self.my_map1.scale() >= 45000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
+            self.scalebar.setUnitLabel("km")
+            self.scalebar.setUnitsPerSegment(1.5)
+
+        elif self.my_map1.scale() >= 30000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
+            self.scalebar.setUnitLabel("km")
+            self.scalebar.setUnitsPerSegment(1)
+
+        elif self.my_map1.scale() >= 20000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
+            self.scalebar.setUnitLabel("km")
+            self.scalebar.setUnitsPerSegment(0.5)
+
+        elif self.my_map1.scale() >= 9000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
+            self.scalebar.setUnitLabel("m")
+            self.scalebar.setUnitsPerSegment(250)
+
+        elif self.my_map1.scale() >= 5000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
+            self.scalebar.setUnitLabel("m")
+            self.scalebar.setUnitsPerSegment(100)
+
+        else:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 0: meter
+            self.scalebar.setUnitLabel("m")
+            self.scalebar.setUnitsPerSegment(50)
+
+        self.scalebar.update()
 
     def ouverture_composeur(self):
 
@@ -989,4 +1008,29 @@ class MapCEN:
         #
         iface.openLayoutDesigner(layout2)
 
+
+    def test(self):
+
+
+        if self.dlg.horizontalSlider.value() == 2:
+            self.my_map1.setScale(self.echelle/1.8)
+        elif self.dlg.horizontalSlider.value() == 1:
+            self.my_map1.setScale(self.echelle/1.4)
+        elif self.dlg.horizontalSlider.value() == 0:
+            self.my_map1.setScale(self.echelle)
+        elif self.dlg.horizontalSlider.value() == -1:
+            self.my_map1.setScale(self.echelle*1.4)
+        else:
+            self.my_map1.setScale(self.echelle*1.8)
+
+        self.my_map1.refresh()
+
+        self.layout3 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
+        self.dlg.graphicsView.setScene(self.layout3)
+        self.layout.refresh()
+
+        print(self.my_map1.scale())
+
+
+        self.bar_echelle_auto()
 

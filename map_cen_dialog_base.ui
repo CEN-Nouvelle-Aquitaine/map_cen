@@ -441,6 +441,35 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QCommandLinkButton" name="commandLinkButton_3">
+     <property name="geometry">
+      <rect>
+       <x>1100</x>
+       <y>710</y>
+       <width>41</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../loadercen/resources.qrc">
+       <normaloff>:/plugins/LoaderCEN/info.png</normaloff>:/plugins/LoaderCEN/info.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+    </widget>
     <zorder>graphicsView</zorder>
     <zorder>groupBox_5</zorder>
     <zorder>groupBox_2</zorder>
@@ -451,6 +480,7 @@
     <zorder>horizontalSlider</zorder>
     <zorder>label_9</zorder>
     <zorder>label_10</zorder>
+    <zorder>commandLinkButton_3</zorder>
    </widget>
    <widget class="QWidget" name="tab_3">
     <attribute name="title">

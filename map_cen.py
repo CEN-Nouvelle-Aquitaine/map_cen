@@ -11,7 +11,6 @@
         copyright            : (C) 2022 by Romain Montillet
         email                : r.montillet@cen-na.org
  ***************************************************************************/
-
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -38,6 +37,25 @@ from .map_cen_dialog import MapCENDialog
 import os.path
 
 from datetime import date
+
+
+
+
+class Popup(QWidget):
+    def __init__(self, parent=None):
+        super(Popup, self).__init__(parent)
+
+        self.plugin_dir = os.path.dirname(__file__)
+
+        self.text_edit = QTextBrowser()
+        text = open(self.plugin_dir +'/info_changelog.html').read()
+        self.text_edit.setHtml(text)
+        self.text_edit.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
+
+
+        self.text_edit.setWindowTitle("Nouveautés")
+        self.text_edit.setMinimumSize(500,200)
+        self.text_edit.setMaximumSize(500,200)
 
 class OptionsWindow(QWidget):
     def __init__(self, parent=None):
@@ -81,7 +99,6 @@ class MapCEN:
 
     def __init__(self, iface):
         """Constructor.
-
         :param iface: An interface instance that will be passed to this class
             which provides the hook by which you can manipulate the QGIS
             application at run time.
@@ -127,6 +144,7 @@ class MapCEN:
         self.dlg.commandLinkButton.clicked.connect(self.chargement_qpt)
 
         self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
+        self.dlg.commandLinkButton_3.clicked.connect(self.popup)
         self.dlg.commandLinkButton_4.clicked.connect(self.actualisation_emprise)
         self.dlg.commandLinkButton_5.clicked.connect(self.ouverture_composeur)
         self.dlg.commandLinkButton_6.clicked.connect(self.popup)
@@ -152,15 +170,17 @@ class MapCEN:
         self.dlg.label_11.setMovie(self.movie)
         self.movie.start()
 
+        tool = QgsMapToolPan(self.iface.mapCanvas())
+        tool.canvasReleaseEvent = lambda event: self.function_from_plugin(event)
+        self.iface.mapCanvas().setMapTool(tool)
+
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
-
         We implement this ourselves since we do not inherit QObject.
-
         :param message: String for translation.
         :type message: str, QString
-
         :returns: Translated version of message.
         :rtype: QString
         """
@@ -180,39 +200,29 @@ class MapCEN:
         whats_this=None,
         parent=None):
         """Add a toolbar icon to the toolbar.
-
         :param icon_path: Path to the icon for this action. Can be a resource
             path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
         :type icon_path: str
-
         :param text: Text that should be shown in menu items for this action.
         :type text: str
-
         :param callback: Function to be called when the action is triggered.
         :type callback: function
-
         :param enabled_flag: A flag indicating if the action should be enabled
             by default. Defaults to True.
         :type enabled_flag: bool
-
         :param add_to_menu: Flag indicating whether the action should also
             be added to the menu. Defaults to True.
         :type add_to_menu: bool
-
         :param add_to_toolbar: Flag indicating whether the action should also
             be added to the toolbar. Defaults to True.
         :type add_to_toolbar: bool
-
         :param status_tip: Optional text to show in a popup when mouse pointer
             hovers over the action.
         :type status_tip: str
-
         :param parent: Parent widget for the new action. Defaults None.
         :type parent: QWidget
-
         :param whats_this: Optional text to show in the status bar when the
             mouse pointer hovers over the action.
-
         :returns: The action that was created. Note that the action is also
             added to self.actions list.
         :rtype: QAction
@@ -264,6 +274,9 @@ class MapCEN:
                 action)
             self.iface.removeToolBarIcon(action)
 
+    def function_from_plugin(self, event):
+        print(self.my_map1.scale())
+
 
     def run(self):
         """Run method that performs all the real work"""
@@ -282,6 +295,7 @@ class MapCEN:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
 
     def initialisation(self):
 
@@ -303,8 +317,8 @@ class MapCEN:
         # layer.setScaleBasedVisibility(True)
         # layer.setMaximumScale(10000)
         # layer.setMinimumScale(50000)
-        self.vlayer.loadNamedStyle(self.plugin_path + '/styles_couches/' + self.vlayer.name() + '.qml')
-        self.vlayer.triggerRepaint()
+        # self.vlayer.loadNamedStyle(self.plugin_path + '/styles_couches/' + self.vlayer.name() + '.qml')
+        # self.vlayer.triggerRepaint()
 
         for p in self.vlayer.getFeatures():
             self.listes_sites_MFU.append(str(p.attributes()[2]))
@@ -1001,12 +1015,14 @@ class MapCEN:
 
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 
-        layout2 = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
+        layout_modifie = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
 
-        map_item = layout2.itemById("Carte 1")
+        map_item = layout_modifie.itemById("Carte 1")
+        # map_item = layout_modifie.referenceMap()
+
         map_item.zoomToExtent(iface.mapCanvas().extent())
         #
-        iface.openLayoutDesigner(layout2)
+        iface.openLayoutDesigner(layout_modifie)
 
 
     def test(self):
@@ -1034,3 +1050,9 @@ class MapCEN:
 
         self.bar_echelle_auto()
 
+
+
+    def popup(self):
+
+        self.dialog = Popup()  # +++ - self
+        self.dialog.text_edit.show()

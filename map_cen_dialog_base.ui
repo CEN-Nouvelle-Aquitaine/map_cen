@@ -41,12 +41,14 @@
     </size>
    </property>
    <property name="styleSheet">
-    <string notr="true">QWidget#tab{background-image: url(:/plugins/map_cen/Capture.png)}</string>
+    <string notr="true">QWidget#tab{background-image: url(:/plugins/map_cen/Capture.png)}
+QWidget#tab_2{background-image: url(:/plugins/map_cen/Capture.png)}
+QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
    </property>
    <property name="currentIndex">
     <number>0</number>
    </property>
-   <widget class="QWidget" name="tab_2">
+   <widget class="QWidget" name="tab">
     <property name="styleSheet">
      <string notr="true">QWidget#tab_2{background-image: url(:/plugins/map_cen/Capture.png)}</string>
     </property>
@@ -372,6 +374,107 @@
       <bool>true</bool>
      </property>
     </widget>
+<<<<<<< Updated upstream
+=======
+    <widget class="QSlider" name="horizontalSlider">
+     <property name="geometry">
+      <rect>
+       <x>990</x>
+       <y>40</y>
+       <width>81</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>-2</number>
+     </property>
+     <property name="maximum">
+      <number>2</number>
+     </property>
+     <property name="singleStep">
+      <number>6</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="tickPosition">
+      <enum>QSlider::TicksBothSides</enum>
+     </property>
+     <property name="tickInterval">
+      <number>1</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
+      <rect>
+       <x>960</x>
+       <y>40</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="resources.qrc">:/plugins/map_cen/zoom_out.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_10">
+     <property name="geometry">
+      <rect>
+       <x>1080</x>
+       <y>40</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="resources.qrc">:/plugins/map_cen/zoom.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QCommandLinkButton" name="commandLinkButton_3">
+     <property name="geometry">
+      <rect>
+       <x>1100</x>
+       <y>710</y>
+       <width>41</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/plugins/map_cen/info.png</normaloff>:/plugins/map_cen/info.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+    </widget>
+>>>>>>> Stashed changes
     <zorder>graphicsView</zorder>
     <zorder>groupBox_5</zorder>
     <zorder>groupBox_2</zorder>
@@ -379,8 +482,60 @@
     <zorder>groupBox_4</zorder>
     <zorder>commandLinkButton_2</zorder>
     <zorder>label_2</zorder>
+<<<<<<< Updated upstream
+=======
+    <zorder>horizontalSlider</zorder>
+    <zorder>label_9</zorder>
+    <zorder>label_10</zorder>
+    <zorder>commandLinkButton_3</zorder>
    </widget>
-   <widget class="QWidget" name="tab">
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>Connaître / Gérer / Protéger / Valoriser / Accompagner</string>
+    </attribute>
+    <widget class="QLabel" name="label_13">
+     <property name="geometry">
+      <rect>
+       <x>400</x>
+       <y>490</y>
+       <width>361</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="resources.qrc">:/plugins/map_cen/onglet.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>310</x>
+       <y>130</y>
+       <width>531</width>
+       <height>411</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap>:/plugins/map_cen/underconstruction.gif</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <zorder>label_11</zorder>
+    <zorder>label_13</zorder>
+>>>>>>> Stashed changes
+   </widget>
+   <widget class="QWidget" name="tab_3">
     <attribute name="title">
      <string>Projet actuel</string>
     </attribute>

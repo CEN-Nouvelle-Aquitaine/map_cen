@@ -553,7 +553,6 @@ class MapCEN:
         else:
             QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
 
-
     def mise_en_page(self):
 
         self.dlg.horizontalSlider.setValue(0)

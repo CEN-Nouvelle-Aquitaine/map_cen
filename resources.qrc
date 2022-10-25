@@ -2,11 +2,9 @@
     <qresource prefix="/plugins/map_cen" >
         <file>icon.png</file>
 		<file>Capture.png</file>
-		<file>pdf.png</file>
 		<file>edit.png</file>
    		<file>project.png</file>
 		<file>refresh.png</file>
-		<file>checked.png</file>
 		<file>jpg.png</file>
 		<file>zoom.png</file>
 		<file>zoom_out.png</file>

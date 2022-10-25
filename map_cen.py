@@ -51,7 +51,8 @@ class Popup(QWidget):
         text = open(self.plugin_dir +'/info_changelog.html').read()
         self.text_edit.setHtml(text)
         self.text_edit.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
-
+        self.text_edit.anchorClicked.connect(QtGui.QDesktopServices.openUrl)
+        self.text_edit.setOpenLinks(False)
 
         self.text_edit.setWindowTitle("Nouveautés")
         self.text_edit.setMinimumSize(500,200)
@@ -896,6 +897,8 @@ class MapCEN:
 
     def chargement_qpt(self):
 
+        ## TODO : corriger problème mise à jour de titre des .qpt
+
         project = QgsProject.instance()
 
         # current_row = self.dlg.tableWidget.currentRow()
@@ -1009,7 +1012,14 @@ class MapCEN:
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)
 
-                project.layoutManager().addLayout(layout)
+                existing_layout = project.layoutManager().layoutByName(layout.name())
+                print(existing_layout)
+                if existing_layout:
+                    project.layoutManager().removeLayout(existing_layout)
+
+                result = project.layoutManager().addLayout(layout)
+                print(result)
+
 
 
 

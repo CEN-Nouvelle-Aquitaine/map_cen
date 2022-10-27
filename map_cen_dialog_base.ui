@@ -41,7 +41,9 @@
     </size>
    </property>
    <property name="styleSheet">
-    <string notr="true">QWidget#tab{background-image: url(:/plugins/map_cen/Capture.png)}</string>
+    <string notr="true">QWidget#tab{background-image: url(:/plugins/map_cen/Capture.png)}
+QWidget#tab_2{background-image: url(:/plugins/map_cen/Capture.png)}
+QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
    </property>
    <property name="currentIndex">
     <number>0</number>
@@ -460,8 +462,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset>
-       <normaloff>:/plugins/LoaderCEN/info.png</normaloff>:/plugins/LoaderCEN/info.png</iconset>
+      <iconset resource="resources.qrc">
+       <normaloff>:/plugins/map_cen/info.png</normaloff>:/plugins/map_cen/info.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -529,7 +531,7 @@
    </widget>
    <widget class="QWidget" name="tab">
     <attribute name="title">
-     <string>Projet actuel</string>
+     <string>Liste de templates existants</string>
     </attribute>
     <widget class="QGroupBox" name="groupBox_6">
      <property name="geometry">

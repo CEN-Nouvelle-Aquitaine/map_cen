@@ -145,10 +145,10 @@ class MapCEN:
         self.dlg.commandLinkButton.clicked.connect(self.chargement_qpt)
 
         self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
-        self.dlg.commandLinkButton_3.clicked.connect(self.popup)
+        self.dlg.commandLinkButton_3.clicked.connect(self.popup_info)
         self.dlg.commandLinkButton_4.clicked.connect(self.actualisation_emprise)
         self.dlg.commandLinkButton_5.clicked.connect(self.ouverture_composeur)
-        self.dlg.commandLinkButton_6.clicked.connect(self.popup)
+        self.dlg.commandLinkButton_6.clicked.connect(self.popup_resolution)
 
         # self.default_project_scale = self.iface.mapCanvas().scale()
         # print("echelle par défaut à l'initilaisation du plugin", self.default_project_scale)
@@ -161,7 +161,7 @@ class MapCEN:
         self.dlg.commandLinkButton_4.setEnabled(False)
         self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.commandLinkButton_6.setEnabled(False)
-        self.dlg.horizontalSlider.valueChanged.connect(self.test)
+        self.dlg.horizontalSlider.valueChanged.connect(self.niveau_zoom)
 
         self.dlg.setMouseTracking(True)
         # self.dlg.comboBox_2.setEnabled(False)
@@ -315,29 +315,16 @@ class MapCEN:
 
         self.listes_sites_MFU = []
         self.vlayer = QgsVectorLayer(uri, "Sites gérés CEN-NA", "WFS")
-        # layer.setScaleBasedVisibility(True)
-        # layer.setMaximumScale(10000)
-        # layer.setMinimumScale(50000)
-        # self.vlayer.loadNamedStyle(self.plugin_path + '/styles_couches/' + self.vlayer.name() + '.qml')
-        # self.vlayer.triggerRepaint()
+
 
         for p in self.vlayer.getFeatures():
             self.listes_sites_MFU.append(str(p.attributes()[2]))
-
-        # self.dlg.comboBox_2.addItems(listes_sites_MFU)
 
         completer = QCompleter(self.listes_sites_MFU)
         completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
         self.dlg.lineEdit.setCompleter(completer)
 
-
-
-
-
-
-
-        project = QgsProject.instance()
 
         mises_en_page = []
 
@@ -349,34 +336,13 @@ class MapCEN:
             nom_fichier = os.path.basename(filename)
             self.dlg.comboBox.addItem(nom_fichier)
 
-        # self.dlg.tableWidget.setRowCount(len(mises_en_page))
-        # self.dlg.tableWidget.setColumnCount(1)
-        # self.dlg.tableWidget.setColumnWidth(0, 300)
-        # self.dlg.tableWidget.setHorizontalHeaderLabels(["Modèles de mises en page"])
-        # self.dlg.tableWidget.verticalHeader().setVisible(False)
-        #
-        # for i, filename in enumerate(mises_en_page):
-        #     nom_fichier = os.path.basename(filename)
-        #     item = QTableWidgetItem(nom_fichier)
-        #     self.dlg.tableWidget.setItem(i, 0, item)
-
-
 
         self.ajout_couches()
+
 
     def ajout_couches(self):
 
         ### -------------------- Chargement des sites fonciercen ---------------------- ###
-
-
-        # url_open = urllib.request.urlopen("https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")
-        # colonnes_flux = csv.DictReader(io.TextIOWrapper(url_open, encoding='utf8'), delimiter=';')
-        #
-        # for row in colonnes_flux:
-        #     nom_technique = [row["nom_technique"] for row in colonnes_flux if row['Nom_couche_plugin'] == self.dlg.comboBox.currentText()]
-        #
-        # uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=',nom_technique[0], '&SRSNAME=EPSG:4326&authcfg=', list(k)[0], '&request=GetFeature']
-        # uri = ''.join(uri)
 
         uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:mfu_cenna&SRSNAME=EPSG:4326&authcfg=', list(self.k)[0], '&request=GetFeature']
         uri = ''.join(uri)
@@ -406,18 +372,12 @@ class MapCEN:
         symbol = single_symbol_renderer.symbol()
         symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
 
-        # more efficient than refreshing the whole canvas, which requires a redraw of ALL layers
         self.depts_NA.triggerRepaint()
-
-        # self.alti_aquitaine = iface.addRasterLayer("url=https://opendata.cen-nouvelle-aquitaine.org/geoserver/fond_carto/wms&service=WMS+Raster&version=1.0.0&crs=EPSG:2154&format=image/png&layers=fond_carto_alti_aquitaine&styles", "fond_carto_alti_aquitaine", "wms")
-        # self.alti_limousin = iface.addRasterLayer("url=https://opendata.cen-nouvelle-aquitaine.org/geoserver/fond_carto/wms&service=WMS+Raster&version=1.0.0&crs=EPSG:2154&format=image/png&layers=fond_carto_alti_limousin&styles", "fond_carto_alti_limousin", "wms")
-        # self.alti_pc = iface.addRasterLayer("url=https://opendata.cen-nouvelle-aquitaine.org/geoserver/fond_carto/wms&service=WMS+Raster&version=1.0.0&crs=EPSG:2154&format=image/png&layers=fond_carto_alti_pc&styles", "fond_carto_alti_pc", "wms")
 
         self.activation_boutons()
 
     def activation_boutons(self):
 
-        # self.dlg.comboBox_2.setEnabled(True)
         self.dlg.lineEdit.setEnabled(True)
         self.dlg.commandLinkButton_4.setEnabled(True)
         self.dlg.commandLinkButton_5.setEnabled(True)
@@ -679,27 +639,7 @@ class MapCEN:
         legend.setSplitLayer(True)
 
 
-        # for legendLyr in iface.mapCanvas().layers():
-        #     if legendLyr.name() == "Parcelles CEN NA en MFU":
-        #         renderer = legendLyr.renderer()
-        #         myRenderer = renderer.clone()
-        #         idx = 0
-        #         for cat in myRenderer.categories():
-        #             if len(cat.label()) >= 35:
-        #                 nom_item = cat.label()[:35] + '*' + cat.label()[35:]
-        #             else:
-        #                 nom_item = cat.label()
-        #             idx += 1
-        #             myRenderer.updateCategoryLabel(idx, nom_item)
-        #         legendLyr.setRenderer(myRenderer)
-        #         legendLyr.triggerRepaint()
-
-
         legend.setWrapString("*")
-
-        # layer_to_remove = QgsProject().instance().mapLayersByName("Google Sat'")[0]
-        # legend = [i for i in self.layout.items() if isinstance(i, QgsLayoutItemLegend)][0]
-        # legend.model().rootGroup().removeLayer(layer_to_remove)
 
         legend.adjustBoxSize()
 
@@ -805,7 +745,6 @@ class MapCEN:
         credit_text3.attemptResize(QgsLayoutSize(90, 8, QgsUnitTypes.LayoutMillimeters))
 
 
-
         # Finally add layout to the project via its manager
         self.manager.addLayout(self.layout)
 
@@ -813,43 +752,8 @@ class MapCEN:
 
         self.echelle = self.my_map1.scale()
 
-        self.bar_echelle_auto()
+        self.bar_echelle_auto(self.my_map1)
 
-    def bar_echelle_auto(self):
-
-        print(self.my_map1.scale())
-
-        if self.my_map1.scale() >= 45000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
-            self.scalebar.setUnitLabel("km")
-            self.scalebar.setUnitsPerSegment(1.5)
-
-        elif self.my_map1.scale() >= 30000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
-            self.scalebar.setUnitLabel("km")
-            self.scalebar.setUnitsPerSegment(1)
-
-        elif self.my_map1.scale() >= 20000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)  # 1: kilometer
-            self.scalebar.setUnitLabel("km")
-            self.scalebar.setUnitsPerSegment(0.5)
-
-        elif self.my_map1.scale() >= 9000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
-            self.scalebar.setUnitLabel("m")
-            self.scalebar.setUnitsPerSegment(250)
-
-        elif self.my_map1.scale() >= 5000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 1: kilometer
-            self.scalebar.setUnitLabel("m")
-            self.scalebar.setUnitsPerSegment(100)
-
-        else:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)  # 0: meter
-            self.scalebar.setUnitLabel("m")
-            self.scalebar.setUnitsPerSegment(50)
-
-        self.scalebar.update()
 
     def ouverture_composeur(self):
 
@@ -865,13 +769,6 @@ class MapCEN:
 
         self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
         self.dlg.graphicsView.setScene(self.layout2)
-
-
-
-    def popup(self):
-
-        self.dialog = OptionsWindow()  # +++ - self
-        self.dialog.show()
 
 
     def export(self):
@@ -893,16 +790,9 @@ class MapCEN:
         # print(result_png)  # 0 = export réussi !
 
 
-
     def chargement_qpt(self):
 
-        ## TODO : corriger problème mise à jour de titre des .qpt
-
         project = QgsProject.instance()
-
-        # current_row = self.dlg.tableWidget.currentRow()
-        # current_column = self.dlg.tableWidget.currentColumn()
-        # _item = self.dlg.tableWidget.item(current_row, current_column).text()
 
         for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
             with open(os.path.join(os.getcwd(), filename), 'r') as f:
@@ -940,6 +830,19 @@ class MapCEN:
                     subtitle.attemptMove(QgsLayoutPoint(182, 18, QgsUnitTypes.LayoutMillimeters))
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)
+
+                    ## Ajout de l'échelle à la mise en page
+                    scalebar = [i for i in layout.items() if isinstance(i, QgsLayoutItemScaleBar)][0]
+                    scalebar.setStyle('Single Box')
+
+                    scalebar.applyDefaultSize()
+                    scalebar.applyDefaultSettings()
+
+                    scalebar.setNumberOfSegments(2)
+                    scalebar.setNumberOfSegmentsLeft(0)
+
+                    scalebar.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
+                    scalebar.setFixedSize(QgsLayoutSize(95, 15))
 
                 if layout.name() == "Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
                     ## Ajout d'un titre à la mise en page
@@ -1019,7 +922,7 @@ class MapCEN:
                 result = project.layoutManager().addLayout(layout)
                 print(result)
 
-
+        self.bar_echelle_auto(iface.mapCanvas())
 
 
         fichier_mise_en_page = self.dlg.comboBox.currentText()
@@ -1034,8 +937,7 @@ class MapCEN:
         iface.openLayoutDesigner(layout_modifie)
 
 
-    def test(self):
-
+    def niveau_zoom(self):
 
         if self.dlg.horizontalSlider.value() == 2:
             self.my_map1.setScale(self.echelle/1.8)
@@ -1056,12 +958,50 @@ class MapCEN:
 
         print(self.my_map1.scale())
 
-
-        self.bar_echelle_auto()
-
+        self.bar_echelle_auto(self.my_map1)
 
 
-    def popup(self):
+    def bar_echelle_auto(self, aa):
 
-        self.dialog = Popup()  # +++ - self
+        if aa.scale() >= 45000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
+            self.scalebar.setUnitLabel("km")
+            self.scalebar.setUnitsPerSegment(1.5)
+
+        elif aa.scale()  >= 30000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
+            self.scalebar.setUnitLabel("km")
+            self.scalebar.setUnitsPerSegment(1)
+
+        elif aa.scale()  >= 20000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
+            self.scalebar.setUnitLabel("km")
+            self.scalebar.setUnitsPerSegment(0.5)
+
+        elif aa.scale()  >= 9000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)
+            self.scalebar.setUnitLabel("m")
+            self.scalebar.setUnitsPerSegment(250)
+
+        elif aa.scale()  >= 5000:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)
+            self.scalebar.setUnitLabel("m")
+            self.scalebar.setUnitsPerSegment(100)
+
+        else:
+            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)
+            self.scalebar.setUnitLabel("m")
+            self.scalebar.setUnitsPerSegment(50)
+
+        self.scalebar.update()
+
+
+    def popup_info(self):
+
+        self.dialog = Popup()
         self.dialog.text_edit.show()
+
+    def popup_resolution(self):
+
+        self.dialog = OptionsWindow()
+        self.dialog.show()

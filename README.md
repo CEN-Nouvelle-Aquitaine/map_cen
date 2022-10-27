@@ -4,7 +4,7 @@
 
 <br><br>
 
-### Présentation du plugin d'automatisation cartographique "MapCEN" :
+### <p align="center">Présentation du plugin d'automatisation cartographique "MapCEN" : </p>
 
 <br><br><br><br>
 

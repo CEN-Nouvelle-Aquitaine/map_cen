@@ -638,7 +638,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>80</x>
-        <y>200</y>
+        <y>160</y>
         <width>211</width>
         <height>21</height>
        </rect>
@@ -660,7 +660,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>160</y>
+        <y>120</y>
         <width>311</width>
         <height>41</height>
        </rect>
@@ -686,7 +686,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>80</x>
-        <y>270</y>
+        <y>250</y>
         <width>211</width>
         <height>21</height>
        </rect>
@@ -708,7 +708,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>230</y>
+        <y>210</y>
         <width>311</width>
         <height>41</height>
        </rect>
@@ -731,7 +731,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>310</y>
+        <y>300</y>
         <width>311</width>
         <height>41</height>
        </rect>
@@ -757,7 +757,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>80</x>
-        <y>350</y>
+        <y>340</y>
         <width>211</width>
         <height>21</height>
        </rect>

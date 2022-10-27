@@ -313,9 +313,8 @@ class MapCEN:
         uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:site_gere_poly&SRSNAME=EPSG:4326&authcfg=', list(self.k)[0], '&request=GetFeature']
         uri = ''.join(uri)
 
-        self.listes_sites_MFU = []
         self.vlayer = QgsVectorLayer(uri, "Sites gérés CEN-NA", "WFS")
-
+        self.listes_sites_MFU = []
 
         for p in self.vlayer.getFeatures():
             self.listes_sites_MFU.append(str(p.attributes()[2]))
@@ -752,7 +751,7 @@ class MapCEN:
 
         self.echelle = self.my_map1.scale()
 
-        self.bar_echelle_auto(self.my_map1)
+        self.bar_echelle_auto(self.my_map1,  self.scalebar)
 
 
     def ouverture_composeur(self):
@@ -832,17 +831,19 @@ class MapCEN:
                     layout.addItem(subtitle)
 
                     ## Ajout de l'échelle à la mise en page
-                    scalebar = [i for i in layout.items() if isinstance(i, QgsLayoutItemScaleBar)][0]
-                    scalebar.setStyle('Single Box')
+                    self.scalebar_qpt = [i for i in layout.items() if isinstance(i, QgsLayoutItemScaleBar)][0]
+                    self.scalebar_qpt.setStyle('Single Box')
 
-                    scalebar.applyDefaultSize()
-                    scalebar.applyDefaultSettings()
+                    self.scalebar_qpt.applyDefaultSize()
+                    self.scalebar_qpt.applyDefaultSettings()
 
-                    scalebar.setNumberOfSegments(2)
-                    scalebar.setNumberOfSegmentsLeft(0)
 
-                    scalebar.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
-                    scalebar.setFixedSize(QgsLayoutSize(95, 15))
+                    self.scalebar_qpt.setNumberOfSegments(2)
+                    self.scalebar_qpt.setNumberOfSegmentsLeft(0)
+
+
+                    self.scalebar_qpt.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
+                    self.scalebar_qpt.setFixedSize(QgsLayoutSize(95, 15))
 
                 if layout.name() == "Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
                     ## Ajout d'un titre à la mise en page
@@ -922,8 +923,6 @@ class MapCEN:
                 result = project.layoutManager().addLayout(layout)
                 print(result)
 
-        self.bar_echelle_auto(iface.mapCanvas())
-
 
         fichier_mise_en_page = self.dlg.comboBox.currentText()
 
@@ -935,6 +934,9 @@ class MapCEN:
         map_item.zoomToExtent(iface.mapCanvas().extent())
         #
         iface.openLayoutDesigner(layout_modifie)
+
+
+        self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
 
 
     def niveau_zoom(self):
@@ -958,42 +960,61 @@ class MapCEN:
 
         print(self.my_map1.scale())
 
-        self.bar_echelle_auto(self.my_map1)
+        self.bar_echelle_auto(self.my_map1, self.scalebar)
 
 
-    def bar_echelle_auto(self, aa):
+    def bar_echelle_auto(self, echelle, bar_echelle):
 
-        if aa.scale() >= 45000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
-            self.scalebar.setUnitLabel("km")
-            self.scalebar.setUnitsPerSegment(1.5)
+        if echelle.scale() >= 45000:
+            bar_echelle.setUnits(QgsUnitTypes.DistanceKilometers)
+            bar_echelle.setUnitLabel("km")
+            bar_echelle.setUnitsPerSegment(1.5)
+            # self.scalebar_test.setUnits(QgsUnitTypes.DistanceKilometers)
+            # self.scalebar_test.setUnitLabel("km")
+            # self.scalebar_test.setUnitsPerSegment(1.5)
 
-        elif aa.scale()  >= 30000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
-            self.scalebar.setUnitLabel("km")
-            self.scalebar.setUnitsPerSegment(1)
+        elif echelle.scale() >= 30000:
+            bar_echelle.setUnits(QgsUnitTypes.DistanceKilometers)
+            bar_echelle.setUnitLabel("km")
+            bar_echelle.setUnitsPerSegment(1)
+            # self.scalebar_test.setUnits(QgsUnitTypes.DistanceKilometers)
+            # self.scalebar_test.setUnitLabel("km")
+            # self.scalebar_test.setUnitsPerSegment(1)
 
-        elif aa.scale()  >= 20000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceKilometers)
-            self.scalebar.setUnitLabel("km")
-            self.scalebar.setUnitsPerSegment(0.5)
+        elif echelle.scale() >= 20000:
+            bar_echelle.setUnits(QgsUnitTypes.DistanceKilometers)
+            bar_echelle.setUnitLabel("km")
+            bar_echelle.setUnitsPerSegment(0.5)
+            # self.scalebar_test.setUnits(QgsUnitTypes.DistanceKilometers)
+            # self.scalebar_test.setUnitLabel("km")
+            # self.scalebar_test.setUnitsPerSegment(0.5)
 
-        elif aa.scale()  >= 9000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)
-            self.scalebar.setUnitLabel("m")
-            self.scalebar.setUnitsPerSegment(250)
+        elif echelle.scale() >= 9000:
+            bar_echelle.setUnits(QgsUnitTypes.DistanceMeters)
+            bar_echelle.setUnitLabel("m")
+            bar_echelle.setUnitsPerSegment(250)
+            # self.scalebar_test.setUnits(QgsUnitTypes.DistanceMeters)
+            # self.scalebar_test.setUnitLabel("m")
+            # self.scalebar_test.setUnitsPerSegment(250)
 
-        elif aa.scale()  >= 5000:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)
-            self.scalebar.setUnitLabel("m")
-            self.scalebar.setUnitsPerSegment(100)
+        elif echelle.scale() >= 5000:
+            bar_echelle.setUnits(QgsUnitTypes.DistanceMeters)
+            bar_echelle.setUnitLabel("m")
+            bar_echelle.setUnitsPerSegment(100)
+            # self.scalebar_test.setUnits(QgsUnitTypes.DistanceMeters)
+            # self.scalebar_test.setUnitLabel("m")
+            # self.scalebar_test.setUnitsPerSegment(100)
 
         else:
-            self.scalebar.setUnits(QgsUnitTypes.DistanceMeters)
-            self.scalebar.setUnitLabel("m")
-            self.scalebar.setUnitsPerSegment(50)
+            bar_echelle.setUnits(QgsUnitTypes.DistanceMeters)
+            bar_echelle.setUnitLabel("m")
+            bar_echelle.setUnitsPerSegment(50)
+            # self.scalebar_test.setUnits(QgsUnitTypes.DistanceMeters)
+            # self.scalebar_test.setUnitLabel("m")
+            # self.scalebar_test.setUnitsPerSegment(50)
 
-        self.scalebar.update()
+
+        bar_echelle.update()
 
 
     def popup_info(self):

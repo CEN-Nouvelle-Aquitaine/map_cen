@@ -55,8 +55,7 @@ class Popup(QWidget):
         self.text_edit.setOpenLinks(False)
 
         self.text_edit.setWindowTitle("Nouveautés")
-        self.text_edit.setMinimumSize(500,200)
-        self.text_edit.setMaximumSize(500,200)
+        self.text_edit.setMinimumSize(600,300)
 
 class OptionsWindow(QWidget):
     def __init__(self, parent=None):
@@ -652,7 +651,6 @@ class MapCEN:
         titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
-        title.adjustSizeToText()
         title.attemptMove(QgsLayoutPoint(4.2, 5.8, QgsUnitTypes.LayoutMillimeters))
         title.adjustSizeToText()
         self.layout.addItem(title)
@@ -664,7 +662,6 @@ class MapCEN:
         titre = str("Maîtrise foncière ou d'usage au " + date_du_jour)
         subtitle.setText(titre)
         subtitle.setFont(QFont("Calibri", 14))
-        subtitle.adjustSizeToText()
         subtitle.attemptMove(QgsLayoutPoint(10.5, 13.5, QgsUnitTypes.LayoutMillimeters))
         subtitle.adjustSizeToText()
         self.layout.addItem(subtitle)
@@ -715,10 +712,10 @@ class MapCEN:
         credit_text = QgsLayoutItemLabel(self.layout)
         credit_text.setText(info[0])
         credit_text.setFont(QFont("Calibri", 11))
-        credit_text.adjustSizeToText()
         self.layout.addLayoutItem(credit_text)
         credit_text.attemptMove(QgsLayoutPoint(200, 200, QgsUnitTypes.LayoutMillimeters))
-        credit_text.attemptResize(QgsLayoutSize(95, 5, QgsUnitTypes.LayoutMillimeters))
+        credit_text.adjustSizeToText()
+        # credit_text.attemptResize(QgsLayoutSize(95, 5, QgsUnitTypes.LayoutMillimeters))
 
 
         info2 = ["Source: IGN (fond de carte), IGN (Admin Express), cadastre ETALAB, FoncierCEN"]
@@ -726,10 +723,10 @@ class MapCEN:
         credit_text2.setText(info2[0])
         credit_text2.setFont(QFont("Calibri", 9))
         credit_text2.setItemRotation(-90)
-        credit_text2.adjustSizeToText()
         self.layout.addLayoutItem(credit_text2)
         credit_text2.attemptMove(QgsLayoutPoint(191, 204, QgsUnitTypes.LayoutMillimeters))
-        credit_text2.attemptResize(QgsLayoutSize(150, 4, QgsUnitTypes.LayoutMillimeters))
+        credit_text2.adjustSizeToText()
+        # credit_text2.attemptResize(QgsLayoutSize(150, 4, QgsUnitTypes.LayoutMillimeters))
 
 
         surf_parcelles_site_selectionne = self.layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
@@ -738,10 +735,10 @@ class MapCEN:
         credit_text3 = QgsLayoutItemLabel(self.layout)
         credit_text3.setText(info3)
         credit_text3.setFont(QFont("Calibri", 12, italic=True))
-        credit_text3.adjustSizeToText()
         self.layout.addLayoutItem(credit_text3)
         credit_text3.attemptMove(QgsLayoutPoint(205, 92, QgsUnitTypes.LayoutMillimeters))
-        credit_text3.attemptResize(QgsLayoutSize(90, 8, QgsUnitTypes.LayoutMillimeters))
+        credit_text3.adjustSizeToText()
+        # credit_text3.attemptResize(QgsLayoutSize(90, 8, QgsUnitTypes.LayoutMillimeters))
 
 
         # Finally add layout to the project via its manager
@@ -810,10 +807,9 @@ class MapCEN:
                     titre = self.dlg.lineEdit_2.text()
                     title.setText(titre)
                     title.setFont(QFont("Calibri", 20))
-                    title.adjustSizeToText()
                     title.attemptMove(QgsLayoutPoint(182, 5, QgsUnitTypes.LayoutMillimeters))
-                    title.adjustSizeToText()
                     layout.addItem(title)
+                    title.adjustSizeToText()
                     title.setHAlign(Qt.AlignCenter)
                     title.setVAlign(Qt.AlignVCenter)
                     print(title.hAlign())
@@ -825,7 +821,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_3.text()
                     subtitle.setText(titre)
                     subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.adjustSizeToText()
                     subtitle.attemptMove(QgsLayoutPoint(182, 18, QgsUnitTypes.LayoutMillimeters))
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)
@@ -852,7 +847,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_2.text()
                     title.setText(titre)
                     title.setFont(QFont("Calibri", 20))
-                    title.adjustSizeToText()
                     title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
                     title.adjustSizeToText()
                     layout.addItem(title)
@@ -863,7 +857,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_3.text()
                     subtitle.setText(titre)
                     subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.adjustSizeToText()
                     subtitle.attemptMove(QgsLayoutPoint(120, 22, QgsUnitTypes.LayoutMillimeters))
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)
@@ -875,7 +868,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_2.text()
                     title.setText(titre)
                     title.setFont(QFont("Calibri", 20))
-                    title.adjustSizeToText()
                     title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
                     title.adjustSizeToText()
                     layout.addItem(title)
@@ -886,7 +878,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_3.text()
                     subtitle.setText(titre)
                     subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.adjustSizeToText()
                     subtitle.attemptMove(QgsLayoutPoint(120, 15, QgsUnitTypes.LayoutMillimeters))
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)
@@ -899,7 +890,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_2.text()
                     title.setText(titre)
                     title.setFont(QFont("Calibri", 20))
-                    title.adjustSizeToText()
                     title.attemptMove(QgsLayoutPoint(76, 5, QgsUnitTypes.LayoutMillimeters))
                     title.adjustSizeToText()
                     layout.addItem(title)
@@ -910,7 +900,6 @@ class MapCEN:
                     titre = self.dlg.lineEdit_3.text()
                     subtitle.setText(titre)
                     subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.adjustSizeToText()
                     subtitle.attemptMove(QgsLayoutPoint(76, 17, QgsUnitTypes.LayoutMillimeters))
                     subtitle.adjustSizeToText()
                     layout.addItem(subtitle)

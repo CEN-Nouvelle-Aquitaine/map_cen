@@ -313,6 +313,18 @@ class MapCEN:
         uri = ''.join(uri)
 
         self.vlayer = QgsVectorLayer(uri, "Sites gérés CEN-NA", "WFS")
+
+        if QgsProject.instance().mapLayersByName("Sites gérés CEN-NA"):
+            self.vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
+            iface.messageBar().pushMessage("Couche 'Sites gérés CEN-NA'", "La couche 'Sites gérés CEN-NA est déjà chargée dans le canvas QGIS", level=Qgis.Success, duration=5)
+
+        else:
+            QgsProject.instance().addMapLayer(self.vlayer)
+        if not self.vlayer:
+            QMessageBox.question(iface.mainWindow(), u"Erreur !",
+                                 "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.lineEdit.text(),
+                                 QMessageBox.Ok)
+
         self.listes_sites_MFU = []
 
         for p in self.vlayer.getFeatures():
@@ -346,7 +358,11 @@ class MapCEN:
         uri = ''.join(uri)
 
         # méthode plus rapide pour charger layer que QgsProject.instance().addMapLayer(layer) :
-        if not QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU"):
+        if QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU"):
+            self.layer = QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU")[0]
+            iface.messageBar().pushMessage("Couche 'Parcelles CEN NA en MFU'", "La couche 'Parcelles CEN NA en MFU' est déjà chargée dans le canvas QGIS", level=Qgis.Success, duration=5)
+
+        else:
             self.layer = iface.addVectorLayer(uri, "Parcelles CEN NA en MFU", "WFS")
 
         if not self.layer:
@@ -356,14 +372,17 @@ class MapCEN:
         self.layer.loadNamedStyle(self.plugin_path + '/styles_couches/mfu_cenna.qml')
         self.layer.triggerRepaint()
 
-        if not QgsProject.instance().mapLayersByName("Sites gérés CEN-NA"):
-            QgsProject.instance().addMapLayer(self.vlayer)
-        if not self.vlayer:
-            QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.lineEdit.text(), QMessageBox.Ok)
 
-        self.depts_NA = iface.addVectorLayer(
+        if QgsProject.instance().mapLayersByName("Département"):
+            self.depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
+            iface.messageBar().pushMessage("Couche 'Département'", "La couche 'Département' est déjà chargée dans le canvas QGIS", level=Qgis.Success, duration=5)
+
+        else:
+            self.depts_NA = iface.addVectorLayer(
             "https://opendata.cen-nouvelle-aquitaine.org/administratif/wfs?VERSION=1.0.0&TYPENAME=administratif:departement&SRSNAME=EPSG:4326&request=GetFeature",
             "Département", "WFS")
+        if not self.depts_NA:
+            QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charge la couche 'Département', veuillez contacter le pôle DSI !", QMessageBox.Ok)
 
         single_symbol_renderer = self.depts_NA.renderer()
 
@@ -380,7 +399,9 @@ class MapCEN:
         self.dlg.commandLinkButton_4.setEnabled(True)
         self.dlg.commandLinkButton_5.setEnabled(True)
         self.dlg.commandLinkButton_6.setEnabled(True)
-
+        self.dlg.radioButton.setEnabled(True)
+        self.dlg.radioButton_2.setEnabled(True)
+        self.dlg.radioButton_3.setEnabled(True)
 
     def actualisation_emprise(self):
 

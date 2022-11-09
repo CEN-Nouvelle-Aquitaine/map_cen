@@ -119,6 +119,9 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
         </item>
         <item>
          <widget class="QRadioButton" name="radioButton_2">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>OpenStreetMap</string>
           </property>
@@ -126,8 +129,14 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
         </item>
         <item>
          <widget class="QRadioButton" name="radioButton_3">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Scan 25 IGN</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

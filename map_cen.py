@@ -35,6 +35,7 @@ from .resources import *
 # Import the code for the dialog
 from .map_cen_dialog import MapCENDialog
 import os.path
+import urllib
 
 from datetime import date
 
@@ -48,8 +49,12 @@ class Popup(QWidget):
         self.plugin_dir = os.path.dirname(__file__)
 
         self.text_edit = QTextBrowser()
-        text = open(self.plugin_dir +'/info_changelog.html').read()
-        self.text_edit.setHtml(text)
+        fp = urllib.request.urlopen("https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/map_cen/main/info_changelog.html")
+        mybytes = fp.read()
+        html_changelog = mybytes.decode("utf8")
+        fp.close()
+
+        self.text_edit.setHtml(html_changelog)
         self.text_edit.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
         self.text_edit.anchorClicked.connect(QtGui.QDesktopServices.openUrl)
         self.text_edit.setOpenLinks(False)
@@ -479,6 +484,8 @@ class MapCEN:
 
             self.vlayer.selectByExpression("\"nom_site\"= '" + self.dlg.lineEdit.text() + "'")
 
+            "\"nom_site\"= \' " + self.dlg.lineEdit.text() + " \'"
+
             iface.mapCanvas().zoomToSelected(self.vlayer)
 
             QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
@@ -853,10 +860,8 @@ class MapCEN:
                     self.scalebar_qpt.applyDefaultSize()
                     self.scalebar_qpt.applyDefaultSettings()
 
-
                     self.scalebar_qpt.setNumberOfSegments(2)
                     self.scalebar_qpt.setNumberOfSegmentsLeft(0)
-
 
                     self.scalebar_qpt.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
                     self.scalebar_qpt.setFixedSize(QgsLayoutSize(95, 15))

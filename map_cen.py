@@ -40,8 +40,6 @@ import urllib
 from datetime import date
 
 
-
-
 class Popup(QWidget):
     def __init__(self, parent=None):
         super(Popup, self).__init__(parent)
@@ -161,11 +159,14 @@ class MapCEN:
         self.dlg.graphicsView.setMouseTracking(True)
 
         self.dlg.commandLinkButton_2.setEnabled(True)
-        self.dlg.lineEdit.setEnabled(False)
+        # self.dlg.lineEdit.setEnabled(False)
         self.dlg.commandLinkButton_4.setEnabled(False)
         self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.commandLinkButton_6.setEnabled(False)
         self.dlg.horizontalSlider.valueChanged.connect(self.niveau_zoom)
+        self.dlg.comboBox_2.currentIndexChanged.connect(self.choix_dept)
+
+        # self.dlg.lineEdit.textChanged.connect(self.onTextChanged)
 
         self.dlg.setMouseTracking(True)
         # self.dlg.comboBox_2.setEnabled(False)
@@ -178,6 +179,7 @@ class MapCEN:
         tool = QgsMapToolPan(self.iface.mapCanvas())
         tool.canvasReleaseEvent = lambda event: self.function_from_plugin(event)
         self.iface.mapCanvas().setMapTool(tool)
+
 
 
     # noinspection PyMethodMayBeStatic
@@ -301,6 +303,26 @@ class MapCEN:
             # substitute with your code.
             pass
 
+    def choix_dept(self):
+
+        self.listes_sites_MFU_filtered = []
+
+        departement = self.dlg.comboBox_2.currentText()[0:2]
+
+        if not self.dlg.comboBox_2.currentIndex == -1:
+            for p in self.vlayer.getFeatures(
+                    QgsFeatureRequest().setFilterExpression('substr("codesite",1,2) = \'%s\'' % departement)):
+                self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+        else:
+            for p in self.vlayer.getFeatures():
+                self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+
+        self.dlg.mComboBox.clear()
+
+        self.listes_sites_MFU_filtered.sort()
+
+        self.dlg.mComboBox.addItems(self.listes_sites_MFU_filtered)
+
 
     def initialisation(self):
 
@@ -327,19 +349,22 @@ class MapCEN:
             QgsProject.instance().addMapLayer(self.vlayer)
         if not self.vlayer:
             QMessageBox.question(iface.mainWindow(), u"Erreur !",
-                                 "Impossible de charge la couche %s, veuillez contacter le pôle DSI !" % self.dlg.lineEdit.text(),
+                                 "Impossible de charge la couche 'Sites gérés CEN-NA', veuillez contacter le pôle DSI !",
                                  QMessageBox.Ok)
 
         self.listes_sites_MFU = []
 
+
         for p in self.vlayer.getFeatures():
             self.listes_sites_MFU.append(str(p.attributes()[2]))
 
-        completer = QCompleter(self.listes_sites_MFU)
-        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        completer.setFilterMode(Qt.MatchContains)
-        self.dlg.lineEdit.setCompleter(completer)
+        # completer = QCompleter(self.listes_sites_MFU)
+        # completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        # completer.setFilterMode(Qt.MatchContains)
+        # self.dlg.lineEdit.setCompleter(completer)
 
+        # self.dlg.mComboBox.setLineEdit(self.dlg.lineEdit)
+        self.dlg.mComboBox.addItems(self.listes_sites_MFU)
 
         mises_en_page = []
 
@@ -350,6 +375,15 @@ class MapCEN:
         for i, filename in enumerate(mises_en_page):
             nom_fichier = os.path.basename(filename)
             self.dlg.comboBox.addItem(nom_fichier)
+
+        self.listes_sites_MFU = []
+
+        dpts_NA = ["16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
+                   "33 - Gironde", "40 - Landes", "47 - Lot", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
+                   "86 - Vienne", "87 - Haute-Vienne"]
+
+        self.dlg.comboBox_2.addItems(dpts_NA)
+
 
 
         self.ajout_couches()
@@ -400,7 +434,7 @@ class MapCEN:
 
     def activation_boutons(self):
 
-        self.dlg.lineEdit.setEnabled(True)
+        # self.dlg.lineEdit.setEnabled(True)
         self.dlg.commandLinkButton_4.setEnabled(True)
         self.dlg.commandLinkButton_5.setEnabled(True)
         self.dlg.commandLinkButton_6.setEnabled(True)
@@ -408,10 +442,27 @@ class MapCEN:
         self.dlg.radioButton_2.setEnabled(True)
         self.dlg.radioButton_3.setEnabled(True)
 
+
+    def onTextChanged(self, filter_text):
+
+        filtered_sites_MFU = [item for item in self.listes_sites_MFU if item.lower().startswith(filter_text.lower())]
+
+        checked_items = self.dlg.mComboBox.checkedItems()
+
+        self.dlg.mComboBox.addItems(filtered_sites_MFU)
+
+        # retain checked items
+        for checked_item in checked_items:
+            index = self.dlg.mComboBox.findText(checked_item)
+            if index > -1:
+                self.dlg.mComboBox.setItemCheckState(index, Qt.Checked)
+
     def actualisation_emprise(self):
 
-        if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
-            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+        self.vlayer.removeSelection()
+
+        # if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
+        #     QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
 
         ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
 
@@ -478,66 +529,63 @@ class MapCEN:
         parent.removeChildNode(fond_carte)
 
 
-        # ### Zoom sur emprise du site CEN selectionné:
+        # ### Zoom sur emprise du ou des sites CEN selectionnés:
 
-        if self.dlg.lineEdit.text() in self.listes_sites_MFU:
+        for sites in self.dlg.mComboBox.checkedItems():
 
-            self.vlayer.selectByExpression("\"nom_site\"= '" + self.dlg.lineEdit.text() + "'")
+            self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
 
-            "\"nom_site\"= \' " + self.dlg.lineEdit.text() + " \'"
+        iface.mapCanvas().zoomToSelected(self.vlayer)
 
-            iface.mapCanvas().zoomToSelected(self.vlayer)
+        QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
 
-            QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
 
-            ##On change légèrement l'échelle de visualisation du project en la diminuant légèrement car sinon zoom trop important lorsque zoomtoextent(layer) dans composeur d'impression
-            # self.iface.mapCanvas().zoomScale(round((iface.mapCanvas().scale()*1.2)))
+        rules = (
+            ('Site CEN sélectionné', "is_selected()", 'red'),
+        )
 
-            rules = (
-                ('Site CEN sélectionné', "is_selected()", 'red'),
-            )
+        # create a new rule-based renderer
+        symbol = QgsSymbol.defaultSymbol(self.vlayer.geometryType())
+        renderer = QgsRuleBasedRenderer(symbol)
 
-            # create a new rule-based renderer
-            symbol = QgsSymbol.defaultSymbol(self.vlayer.geometryType())
-            renderer = QgsRuleBasedRenderer(symbol)
+        # get the "root" rule
+        root_rule = renderer.rootRule()
 
-            # get the "root" rule
-            root_rule = renderer.rootRule()
+        for label, expression, color_name in rules:
+            # create a clone (i.e. a copy) of the default rule
+            rule = root_rule.children()[0].clone()
+            # set the label, expression and color
+            rule.setLabel(label)
+            rule.setFilterExpression(expression)
+            symbol_layer = rule.symbol().symbolLayer(0)
+            print(symbol_layer)
+            color = symbol_layer.color()
+            generator = QgsGeometryGeneratorSymbolLayer.create({})
+            generator.setSymbolType(QgsSymbol.Marker)
+            generator.setGeometryExpression("centroid($geometry)")
+            generator.setColor(QColor('Red'))
+            rule.symbol().setColor(QColor(color_name))
+            # set the scale limits if they have been specified
+            # append the rule to the list of rules
+            rule.symbol().changeSymbolLayer(0, generator)
+            root_rule.appendChild(rule)
 
-            for label, expression, color_name in rules:
-                # create a clone (i.e. a copy) of the default rule
-                rule = root_rule.children()[0].clone()
-                # set the label, expression and color
-                rule.setLabel(label)
-                rule.setFilterExpression(expression)
-                symbol_layer = rule.symbol().symbolLayer(0)
-                print(symbol_layer)
-                color = symbol_layer.color()
-                generator = QgsGeometryGeneratorSymbolLayer.create({})
-                generator.setSymbolType(QgsSymbol.Marker)
-                generator.setGeometryExpression("centroid($geometry)")
-                generator.setColor(QColor('Red'))
-                rule.symbol().setColor(QColor(color_name))
-                # set the scale limits if they have been specified
-                # append the rule to the list of rules
-                rule.symbol().changeSymbolLayer(0, generator)
-                root_rule.appendChild(rule)
+        # delete the default rule
+        root_rule.removeChildAt(0)
 
-            # delete the default rule
-            root_rule.removeChildAt(0)
+        # apply the renderer to the layer
+        self.vlayer.setRenderer(renderer)
+        # refresh the layer on the map canvas
+        self.vlayer.triggerRepaint()
 
-            # apply the renderer to the layer
-            self.vlayer.setRenderer(renderer)
-            # refresh the layer on the map canvas
-            self.vlayer.triggerRepaint()
+        sites_selectionnes = (','.join("'" + item.replace("'", "''") + "'" for item in self.dlg.mComboBox.checkedItems()))
 
-            expr = "\"nom_site\"= '" + self.dlg.lineEdit.text() + "'"
-            self.layer.setSubsetString(expr)
+        expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
+        self.layer.setSubsetString(expr)
 
-            self.mise_en_page()
+        self.mise_en_page()
 
-        else:
-            QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+
 
     def mise_en_page(self):
 
@@ -676,7 +724,7 @@ class MapCEN:
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str(self.dlg.lineEdit.text() + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
+        titre = str(', '.join(self.dlg.mComboBox.checkedItems()) + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.attemptMove(QgsLayoutPoint(4.2, 5.8, QgsUnitTypes.LayoutMillimeters))

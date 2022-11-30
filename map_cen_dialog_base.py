@@ -55,9 +55,12 @@ class Ui_MapCENDialogBase(object):
         self.radioButton.setObjectName("radioButton")
         self.verticalLayout.addWidget(self.radioButton)
         self.radioButton_2 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radioButton_2.setEnabled(False)
         self.radioButton_2.setObjectName("radioButton_2")
         self.verticalLayout.addWidget(self.radioButton_2)
         self.radioButton_3 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radioButton_3.setEnabled(False)
+        self.radioButton_3.setCheckable(True)
         self.radioButton_3.setObjectName("radioButton_3")
         self.verticalLayout.addWidget(self.radioButton_3)
         self.label = QtWidgets.QLabel(self.groupBox_2)
@@ -171,6 +174,9 @@ class Ui_MapCENDialogBase(object):
         self.commandLinkButton_3.setIcon(icon4)
         self.commandLinkButton_3.setIconSize(QtCore.QSize(25, 25))
         self.commandLinkButton_3.setObjectName("commandLinkButton_3")
+        self.mComboBox = QgsCheckableComboBox(self.tab_2)
+        self.mComboBox.setGeometry(QtCore.QRect(240, 180, 160, 27))
+        self.mComboBox.setObjectName("mComboBox")
         self.graphicsView.raise_()
         self.groupBox_5.raise_()
         self.groupBox_2.raise_()
@@ -182,6 +188,7 @@ class Ui_MapCENDialogBase(object):
         self.label_9.raise_()
         self.label_10.raise_()
         self.commandLinkButton_3.raise_()
+        self.mComboBox.raise_()
         self.tabWidget.addTab(self.tab_2, "")
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
@@ -323,6 +330,8 @@ class Ui_MapCENDialogBase(object):
         self.label_8.setText(_translate("MapCENDialogBase", "Source :"))
         self.lineEdit_4.setText(_translate("MapCENDialogBase", "Automatisable ?"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MapCENDialogBase", "Liste de templates existants"))
+from qgscheckablecombobox import QgsCheckableComboBox
+import resources_rc
 
 
 if __name__ == "__main__":

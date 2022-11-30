@@ -59,9 +59,9 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>230</y>
+       <y>190</y>
        <width>331</width>
-       <height>351</height>
+       <height>411</height>
       </rect>
      </property>
      <property name="font">
@@ -166,33 +166,11 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
        <string> Préférences de mise en page :</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_3">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>200</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(8, 8, 8);</string>
-      </property>
-      <property name="text">
-       <string>Sites CEN-NA :</string>
-      </property>
-     </widget>
      <widget class="QCommandLinkButton" name="commandLinkButton_4">
       <property name="geometry">
        <rect>
         <x>50</x>
-        <y>270</y>
+        <y>300</y>
         <width>221</width>
         <height>51</height>
        </rect>
@@ -211,29 +189,70 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
        </size>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit">
-      <property name="enabled">
-       <bool>true</bool>
+     <widget class="QgsCheckableComboBox" name="mComboBox">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>260</y>
+        <width>290</width>
+        <height>20</height>
+       </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>290</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>290</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="maxVisibleItems">
+       <number>15</number>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QComboBox::AdjustToContents</enum>
+      </property>
+      <property name="defaultText">
+       <string>Sélectionner le ou les site(s) ici</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>200</y>
+        <width>201</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(8, 8, 8);</string>
+      </property>
+      <property name="text">
+       <string>Filtrer les sites par département :</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_2">
       <property name="geometry">
        <rect>
         <x>20</x>
         <y>220</y>
-        <width>291</width>
-        <height>21</height>
+        <width>191</width>
+        <height>22</height>
        </rect>
-      </property>
-      <property name="text">
-       <string>Taper le nom du site ici (Ex: Vallée De La Dronne )</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="readOnly">
-       <bool>false</bool>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
       </property>
      </widget>
     </widget>
@@ -807,6 +826,13 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
    </widget>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsCheckableComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgscheckablecombobox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
  </resources>
  <connections/>

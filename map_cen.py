@@ -460,6 +460,7 @@ class MapCEN:
     def actualisation_emprise(self):
 
         self.vlayer.removeSelection()
+        self.layer.removeSelection()
 
         # if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
         #     QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
@@ -580,7 +581,12 @@ class MapCEN:
 
         sites_selectionnes = (','.join("'" + item.replace("'", "''") + "'" for item in self.dlg.mComboBox.checkedItems()))
 
-        expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
+        if len(self.dlg.mComboBox.checkedItems()) < 2:
+            expr = "\"nom_site\" IS {0}".format(sites_selectionnes)
+        else:
+            expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
+
+
         self.layer.setSubsetString(expr)
 
         self.mise_en_page()
@@ -805,8 +811,13 @@ class MapCEN:
         # credit_text2.attemptResize(QgsLayoutSize(150, 4, QgsUnitTypes.LayoutMillimeters))
 
 
-        surf_parcelles_site_selectionne = self.layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
-        surf_ha = surf_parcelles_site_selectionne[0]/10000
+        for sites in self.dlg.mComboBox.checkedItems():
+            self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+
+        temp_layer = self.vlayer.materialize(QgsFeatureRequest().setFilterFids(self.vlayer.selectedFeatureIds()))
+
+        surf_parcelles_site_selectionne = temp_layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
+        surf_ha = surf_parcelles_site_selectionne[0]
         info3 = "Surface totale maîtrisée sur le site : " + str(surf_ha) + " ha."
         credit_text3 = QgsLayoutItemLabel(self.layout)
         credit_text3.setText(info3)

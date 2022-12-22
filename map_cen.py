@@ -20,6 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
@@ -36,6 +37,8 @@ from .resources import *
 from .map_cen_dialog import MapCENDialog
 import os.path
 import urllib
+import csv
+import io
 
 from datetime import date
 
@@ -162,9 +165,10 @@ class MapCEN:
         # self.dlg.lineEdit.setEnabled(False)
         self.dlg.commandLinkButton_4.setEnabled(False)
         self.dlg.commandLinkButton_5.setEnabled(False)
-        self.dlg.commandLinkButton_6.setEnabled(False)
         self.dlg.horizontalSlider.valueChanged.connect(self.niveau_zoom)
         self.dlg.comboBox_2.currentIndexChanged.connect(self.choix_dept)
+
+        self.dlg.comboBox.currentIndexChanged.connect(self.liste_couche_template)
 
         # self.dlg.lineEdit.textChanged.connect(self.onTextChanged)
 
@@ -180,6 +184,16 @@ class MapCEN:
         tool.canvasReleaseEvent = lambda event: self.function_from_plugin(event)
         self.iface.mapCanvas().setMapTool(tool)
 
+        ## On ajoute le nom des templates à la liste déroulante de l'onglet "mises en page" :
+        mises_en_page = []
+
+        for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
+            mises_en_page.append(filename)
+
+
+        for i, filename in enumerate(mises_en_page):
+            nom_fichier = os.path.basename(filename)
+            self.dlg.comboBox.addItem(nom_fichier)
 
 
     # noinspection PyMethodMayBeStatic
@@ -366,15 +380,6 @@ class MapCEN:
         # self.dlg.mComboBox.setLineEdit(self.dlg.lineEdit)
         self.dlg.mComboBox.addItems(self.listes_sites_MFU)
 
-        mises_en_page = []
-
-        for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
-            mises_en_page.append(filename)
-
-
-        for i, filename in enumerate(mises_en_page):
-            nom_fichier = os.path.basename(filename)
-            self.dlg.comboBox.addItem(nom_fichier)
 
         self.listes_sites_MFU = []
 
@@ -437,7 +442,6 @@ class MapCEN:
         # self.dlg.lineEdit.setEnabled(True)
         self.dlg.commandLinkButton_4.setEnabled(True)
         self.dlg.commandLinkButton_5.setEnabled(True)
-        self.dlg.commandLinkButton_6.setEnabled(True)
         self.dlg.radioButton.setEnabled(True)
         self.dlg.radioButton_2.setEnabled(True)
         self.dlg.radioButton_3.setEnabled(True)
@@ -587,7 +591,6 @@ class MapCEN:
             expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
 
 
-        self.layer.setSubsetString(expr)
 
         self.mise_en_page()
 
@@ -606,7 +609,7 @@ class MapCEN:
 
         project = QgsProject.instance()
         self.manager = project.layoutManager()
-        layout_name = 'Mise en page automatique MapCEN'
+        layout_name = 'Mise en page automatique MapCEN | Carto MFU'
         layouts_list = self.manager.printLayouts()
         # Just 4 debug
         # remove any duplicate layouts
@@ -850,7 +853,7 @@ class MapCEN:
 
     def zoom_to_layer(self):
 
-        self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
+        self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN | Carto MFU').clone()
         self.dlg.graphicsView.setScene(self.layout2)
 
 
@@ -860,7 +863,7 @@ class MapCEN:
         if fileName:
             dossier_sauvegarde = fileName[0]
 
-        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN')
+        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN | Carto MFU')
 
         self.layout.renderContext().setDpi(300)
 
@@ -872,145 +875,368 @@ class MapCEN:
 
         # print(result_png)  # 0 = export réussi !
 
+    def liste_couche_template(self):
+
+        self.dlg.mComboBox_2.clear()
+
+        couches = []
+
+        for lyr in QgsProject.instance().mapLayers().values():
+            couches.append(lyr.name())
+
+        self.dlg.mComboBox_2.addItems(sorted(couches))
+
 
     def chargement_qpt(self):
 
         project = QgsProject.instance()
 
-        for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
-            with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                layout = QgsPrintLayout(project)
-                layout.initializeDefaults()
-                template_content = f.read()
-                doc = QDomDocument()
-                doc.setContent(template_content)
-                layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
-                layout.setName(os.path.basename(filename))
 
-                if layout.name() == "Modèle_mep_carto_CEN_NA_A3_paysage_simple.qpt":
-                    ## Ajout d'un titre à la mise en page
-                    title = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(title)
-                    titre = self.dlg.lineEdit_2.text()
-                    title.setText(titre)
-                    title.setFont(QFont("Calibri", 20))
-                    title.attemptMove(QgsLayoutPoint(182, 5, QgsUnitTypes.LayoutMillimeters))
-                    layout.addItem(title)
-                    title.adjustSizeToText()
-                    title.setHAlign(Qt.AlignCenter)
-                    title.setVAlign(Qt.AlignVCenter)
-                    print(title.hAlign())
-                    title.setHAlign(160)
-
-                    ## Ajout d'un sous titre à la mise en page
-                    subtitle = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(subtitle)
-                    titre = self.dlg.lineEdit_3.text()
-                    subtitle.setText(titre)
-                    subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.attemptMove(QgsLayoutPoint(182, 18, QgsUnitTypes.LayoutMillimeters))
-                    subtitle.adjustSizeToText()
-                    layout.addItem(subtitle)
-
-                    ## Ajout de l'échelle à la mise en page
-                    self.scalebar_qpt = [i for i in layout.items() if isinstance(i, QgsLayoutItemScaleBar)][0]
-                    self.scalebar_qpt.setStyle('Single Box')
-
-                    self.scalebar_qpt.applyDefaultSize()
-                    self.scalebar_qpt.applyDefaultSettings()
-
-                    self.scalebar_qpt.setNumberOfSegments(2)
-                    self.scalebar_qpt.setNumberOfSegmentsLeft(0)
-
-                    self.scalebar_qpt.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
-                    self.scalebar_qpt.setFixedSize(QgsLayoutSize(95, 15))
-
-                if layout.name() == "Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
-                    ## Ajout d'un titre à la mise en page
-                    title = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(title)
-                    titre = self.dlg.lineEdit_2.text()
-                    title.setText(titre)
-                    title.setFont(QFont("Calibri", 20))
-                    title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
-                    title.adjustSizeToText()
-                    layout.addItem(title)
-
-                    ## Ajout d'un sous titre à la mise en page
-                    subtitle = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(subtitle)
-                    titre = self.dlg.lineEdit_3.text()
-                    subtitle.setText(titre)
-                    subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.attemptMove(QgsLayoutPoint(120, 22, QgsUnitTypes.LayoutMillimeters))
-                    subtitle.adjustSizeToText()
-                    layout.addItem(subtitle)
-
-                if layout.name() == "Modèle_mep_carto_CEN_NA_A4_paysage_simple.qpt":
-                    ## Ajout d'un titre à la mise en page
-                    title = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(title)
-                    titre = self.dlg.lineEdit_2.text()
-                    title.setText(titre)
-                    title.setFont(QFont("Calibri", 20))
-                    title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
-                    title.adjustSizeToText()
-                    layout.addItem(title)
-
-                    ## Ajout d'un sous titre à la mise en page
-                    subtitle = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(subtitle)
-                    titre = self.dlg.lineEdit_3.text()
-                    subtitle.setText(titre)
-                    subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.attemptMove(QgsLayoutPoint(120, 15, QgsUnitTypes.LayoutMillimeters))
-                    subtitle.adjustSizeToText()
-                    layout.addItem(subtitle)
+        if self.dlg.comboBox.currentText() == " ":
+            QMessageBox.question(iface.mainWindow(), u"Aucun template sélectionné !", "Veuillez sélectionner un modèle !", QMessageBox.Ok)
+        else:
 
 
-                if layout.name() == "Modèle_mep_carto_CEN_NA_A4_portrait_simple.qpt":
-                    ## Ajout d'un titre à la mise en page
-                    title = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(title)
-                    titre = self.dlg.lineEdit_2.text()
-                    title.setText(titre)
-                    title.setFont(QFont("Calibri", 20))
-                    title.attemptMove(QgsLayoutPoint(76, 5, QgsUnitTypes.LayoutMillimeters))
-                    title.adjustSizeToText()
-                    layout.addItem(title)
+            for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
+                with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                    layout = QgsPrintLayout(project)
+                    layout.initializeDefaults()
+                    template_content = f.read()
+                    doc = QDomDocument()
+                    doc.setContent(template_content)
+                    layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
+                    layout.setName(os.path.basename(filename))
 
-                    ## Ajout d'un sous titre à la mise en page
-                    subtitle = QgsLayoutItemLabel(layout)
-                    layout.addLayoutItem(subtitle)
-                    titre = self.dlg.lineEdit_3.text()
-                    subtitle.setText(titre)
-                    subtitle.setFont(QFont("Calibri", 16))
-                    subtitle.attemptMove(QgsLayoutPoint(76, 17, QgsUnitTypes.LayoutMillimeters))
-                    subtitle.adjustSizeToText()
-                    layout.addItem(subtitle)
+                    if layout.name() == "1. Modèle standard carto A4 (consolidé).qpt":
 
-                existing_layout = project.layoutManager().layoutByName(layout.name())
-                print(existing_layout)
-                if existing_layout:
-                    project.layoutManager().removeLayout(existing_layout)
+                        ## Add map to layout
+                        self.map_modele_test = QgsLayoutItemMap(layout)
 
-                result = project.layoutManager().addLayout(layout)
-                print(result)
+                        # Charger une carte vide
+                        self.map_modele_test.setRect(20, 20, 20, 20)
+
+                        # self.map_modele_test.setLayers([self.layer, self.fond])
+
+                        # Mettre le canvas courant comme emprise
+                        self.map_modele_test.setExtent(iface.mapCanvas().extent())
+
+                        # Position de la carte dans le composeur
+                        self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
+
+                        # on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
+                        self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
+
+                        self.map_modele_test.refresh()
+
+                        self.map_modele_test.setBackgroundColor(QColor(255, 255, 255, 255))
+                        self.map_modele_test.setFrameEnabled(True)
+                        layout.addLayoutItem(self.map_modele_test)
+
+                        self.map_modele_test.setId("carte_principale")
+
+                        ## Ajout d'un titre à la mise en page
+                        title = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(title)
+                        titre = self.dlg.lineEdit_2.text()
+                        title.setText(titre)
+                        title.setFont(QFont("Calibri", 15, QFont.Bold))
+                        title.attemptMove(QgsLayoutPoint(50, 2, QgsUnitTypes.LayoutMillimeters))
+                        layout.addItem(title)
+                        # title.adjustSizeToText() on n'utilise plutot setFixedSize pour pouvoir centrer le titre de manière plus optimale ici
+                        title.setHAlign(Qt.AlignHCenter)
+                        title.setVAlign(Qt.AlignVCenter)
+                        title.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
 
 
-        fichier_mise_en_page = self.dlg.comboBox.currentText()
 
-        layout_modifie = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
+                        ## Ajout d'un sous titre à la mise en page
+                        subtitle = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(subtitle)
+                        titre = self.dlg.lineEdit_3.text()
+                        subtitle.setText(titre)
+                        subtitle.setFont(QFont("MS Shell Dlg 2", 10))
+                        subtitle.attemptMove(QgsLayoutPoint(50, 10, QgsUnitTypes.LayoutMillimeters))
+                        layout.addItem(subtitle)
+                        subtitle.setHAlign(Qt.AlignHCenter)
+                        subtitle.setVAlign(Qt.AlignVCenter)
+                        subtitle.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
 
-        map_item = layout_modifie.itemById("Carte 1")
-        # map_item = layout_modifie.referenceMap()
-
-        map_item.zoomToExtent(iface.mapCanvas().extent())
-        #
-        iface.openLayoutDesigner(layout_modifie)
 
 
-        self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
+                        ## Ajout du logo CEN NA en haut à gauche de la page
+                        logo = QgsLayoutItemPicture(layout)
+                        logo.setResizeMode(QgsLayoutItemPicture.Zoom)
+                        logo.setMode(QgsLayoutItemPicture.FormatRaster)
+                        logo.attemptMove(QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters))
+                        logo.setFixedSize(QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters))
+                        logo.setPicturePath(self.plugin_path + '/logo.jpg')
+                        layout.addLayoutItem(logo)
+
+
+                        ## Ajout de la legende :
+
+
+                        legend = QgsLayoutItemLegend(layout)
+
+                        legend.setId('legende_model1')
+                        # legend.setTitle('Legende')
+                        legend.adjustBoxSize()
+                        legend.setFrameEnabled(False)
+                        legend.setAutoUpdateModel(False)
+
+                        legend.setLinkedMap(self.map_modele_test)
+                        layout.addItem(legend)
+
+                        # group_name = 'Périmètres écologiques'  # Name of a group in your legend
+
+                        checked_items = self.dlg.mComboBox_2.checkedItems()
+
+                        layers_to_remove = []
+
+                        # for lyr in iface.mapCanvas().layers():
+                        #     if lyr.name() not in checked_items:
+                        #         layers_to_remove.append(lyr.name())
+
+                        for lyr in project.mapLayers().values():
+                            if lyr.name() not in checked_items:
+                                layers_to_remove.append(lyr.name())
+
+                        # the layer tree
+                        root = project.layerTreeRoot()
+
+                        # get legend
+                        legend = [i for i in layout.items() if isinstance(i, QgsLayoutItemLegend)][0]
+
+                        # disable auto-update
+                        legend.setAutoUpdateModel(False)
+
+                        # legend model
+                        model = legend.model()
+
+                        # the root legend group
+                        root_group = model.rootGroup()
+
+                        # loop through layer names
+                        for layer_name in layers_to_remove:
+                            # find layer in project
+                            layer = project.mapLayersByName(layer_name)[0]
+                            print(layer)
+                            # get layer tree layer instance of layer
+                            layertreelayer = root.findLayer(layer.id())
+
+                            # get the parent of the layer tree layer (layer tree root, or group)
+                            parent = layertreelayer.parent()
+
+                            # if the parent is a group and has a name, find it and remove the layer
+                            if isinstance(parent, QgsLayerTreeGroup) and parent.name():
+                                group = root_group.findGroup(parent.name())
+                                group.removeLayer(layer)
+                            # remove layers that are not in a group
+                            else:
+                                root_group.removeLayer(layer)
+
+                        legend.adjustBoxSize()
+                        layout.refresh()
+
+
+
+                        # legend = [i for i in layout.items() if isinstance(i, QgsLayoutItemLegend)][0]
+                        # legend.model().rootGroup().removeLayer(map_layer_to_remove)
+                        # legend.setLegendFilterByMapEnabled(True)
+
+                        legend.updateLegend()
+
+
+
+                        # root = QgsLayerTree()
+                        # root.addLayer(self.layer).setUseLayerName(False)
+                        # root.addLayer(self.layer).setName("Types de maîtrise")
+                        #
+                        # legend.updateLegend()
+
+                        # legend.setLegendFilterByMapEnabled(True)
+
+                        legend.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
+
+                        # legend.setWrapString("*")
+
+                        #
+                        # layer_to_remove = self.fond
+                        # legend.model().rootGroup().removeLayer(layer_to_remove)
+
+
+
+
+                        ## Ajout de l'échelle à la mise en page
+                        self.scalebar_qpt = QgsLayoutItemScaleBar(layout)
+                        self.scalebar_qpt.setStyle('Single Box')
+                        self.scalebar_qpt.setLinkedMap(self.map_modele_test)
+                        self.scalebar_qpt.applyDefaultSize()
+                        self.scalebar_qpt.applyDefaultSettings()
+
+                        self.scalebar_qpt.setNumberOfSegments(2)
+                        self.scalebar_qpt.setNumberOfSegmentsLeft(0)
+
+                        layout.addLayoutItem(self.scalebar_qpt)
+                        self.scalebar_qpt.attemptMove(QgsLayoutPoint(207, 183, QgsUnitTypes.LayoutMillimeters))
+                        # self.scalebar_qpt.setFixedSize(QgsLayoutSize(55, 15))
+
+                        # ajout de la fleche du Nord
+                        north = QgsLayoutItemPicture(layout)
+                        north.setPicturePath(self.plugin_path + "/NorthArrow_02.svg")
+                        layout.addLayoutItem(north)
+                        north.attemptResize(QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters))
+                        north.attemptMove(QgsLayoutPoint(273, 182, QgsUnitTypes.LayoutMillimeters))
+
+                        #ajout note info:
+                        info = ["Réalisation : " + "DSI / CEN Nouvelle-Aquitaine (" + date.today().strftime("%d/%m/%Y") + ")"]
+                        info2 = ["Source : " + self.dlg.lineEdit_4.text()]
+                        credit_text = QgsLayoutItemLabel(layout)
+                        credit_text.setText(info[0])
+                        credit_text.setFont(QFont("Calibri", 9))
+                        credit_text.setHAlign(Qt.AlignRight)
+                        credit_text.setVAlign(Qt.AlignVCenter)
+                        credit_text.setItemRotation(-90)
+                        credit_text2 = QgsLayoutItemLabel(layout)
+                        credit_text2.setText(info2[0])
+                        credit_text2.setFont(QFont("Calibri", 9))
+                        credit_text2.setHAlign(Qt.AlignRight)
+                        credit_text2.setVAlign(Qt.AlignVCenter)
+                        layout.addLayoutItem(credit_text)
+                        layout.addLayoutItem(credit_text2)
+                        credit_text.attemptMove(QgsLayoutPoint(291.5, 123, QgsUnitTypes.LayoutMillimeters))
+                        credit_text.attemptResize(QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters))
+                        credit_text2.attemptMove(QgsLayoutPoint(189, 168.5, QgsUnitTypes.LayoutMillimeters))
+                        credit_text2.attemptResize(QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters))
+
+                        credit_text2.adjustSizeToText()
+                        # credit_text.attemptResize(QgsLayoutSize(95, 5, QgsUnitTypes.LayoutMillimeters))
+
+
+                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A3_paysage_simple.qpt":
+                        ## Ajout d'un titre à la mise en page
+                        title = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(title)
+                        titre = self.dlg.lineEdit_2.text()
+                        title.setText(titre)
+                        title.setFont(QFont("Calibri", 20))
+                        title.attemptMove(QgsLayoutPoint(182, 5, QgsUnitTypes.LayoutMillimeters))
+                        layout.addItem(title)
+                        title.adjustSizeToText()
+                        title.setHAlign(Qt.AlignCenter)
+                        title.setVAlign(Qt.AlignVCenter)
+                        print(title.hAlign())
+                        title.setHAlign(160)
+
+                        ## Ajout d'un sous titre à la mise en page
+                        subtitle = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(subtitle)
+                        titre = self.dlg.lineEdit_3.text()
+                        subtitle.setText(titre)
+                        subtitle.setFont(QFont("Calibri", 16))
+                        subtitle.attemptMove(QgsLayoutPoint(182, 18, QgsUnitTypes.LayoutMillimeters))
+                        subtitle.adjustSizeToText()
+                        layout.addItem(subtitle)
+
+                        ## Ajout de l'échelle à la mise en page
+                        self.scalebar_qpt = [i for i in layout.items() if isinstance(i, QgsLayoutItemScaleBar)][0]
+                        self.scalebar_qpt.setStyle('Single Box')
+
+                        self.scalebar_qpt.applyDefaultSize()
+                        self.scalebar_qpt.applyDefaultSettings()
+
+                        self.scalebar_qpt.setNumberOfSegments(2)
+                        self.scalebar_qpt.setNumberOfSegmentsLeft(0)
+
+                        self.scalebar_qpt.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
+                        # self.scalebar_qpt.setFixedSize(QgsLayoutSize(95, 15))
+
+                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
+                        ## Ajout d'un titre à la mise en page
+                        title = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(title)
+                        titre = self.dlg.lineEdit_2.text()
+                        title.setText(titre)
+                        title.setFont(QFont("Calibri", 20))
+                        title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
+                        title.adjustSizeToText()
+                        layout.addItem(title)
+
+                        ## Ajout d'un sous titre à la mise en page
+                        subtitle = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(subtitle)
+                        titre = self.dlg.lineEdit_3.text()
+                        subtitle.setText(titre)
+                        subtitle.setFont(QFont("Calibri", 16))
+                        subtitle.attemptMove(QgsLayoutPoint(120, 22, QgsUnitTypes.LayoutMillimeters))
+                        subtitle.adjustSizeToText()
+                        layout.addItem(subtitle)
+
+                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A4_paysage_simple.qpt":
+                        ## Ajout d'un titre à la mise en page
+                        title = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(title)
+                        titre = self.dlg.lineEdit_2.text()
+                        title.setText(titre)
+                        title.setFont(QFont("Calibri", 20))
+                        title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
+                        title.adjustSizeToText()
+                        layout.addItem(title)
+
+                        ## Ajout d'un sous titre à la mise en page
+                        subtitle = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(subtitle)
+                        titre = self.dlg.lineEdit_3.text()
+                        subtitle.setText(titre)
+                        subtitle.setFont(QFont("Calibri", 16))
+                        subtitle.attemptMove(QgsLayoutPoint(120, 15, QgsUnitTypes.LayoutMillimeters))
+                        subtitle.adjustSizeToText()
+                        layout.addItem(subtitle)
+
+
+                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A4_portrait_simple.qpt":
+                        ## Ajout d'un titre à la mise en page
+                        title = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(title)
+                        titre = self.dlg.lineEdit_2.text()
+                        title.setText(titre)
+                        title.setFont(QFont("Calibri", 20))
+                        title.attemptMove(QgsLayoutPoint(76, 5, QgsUnitTypes.LayoutMillimeters))
+                        title.adjustSizeToText()
+                        layout.addItem(title)
+
+                        ## Ajout d'un sous titre à la mise en page
+                        subtitle = QgsLayoutItemLabel(layout)
+                        layout.addLayoutItem(subtitle)
+                        titre = self.dlg.lineEdit_3.text()
+                        subtitle.setText(titre)
+                        subtitle.setFont(QFont("Calibri", 16))
+                        subtitle.attemptMove(QgsLayoutPoint(76, 17, QgsUnitTypes.LayoutMillimeters))
+                        subtitle.adjustSizeToText()
+                        layout.addItem(subtitle)
+
+                    existing_layout = project.layoutManager().layoutByName(layout.name())
+                    print(existing_layout)
+                    if existing_layout:
+                        project.layoutManager().removeLayout(existing_layout)
+
+                    result = project.layoutManager().addLayout(layout)
+                    print(result)
+
+
+            fichier_mise_en_page = self.dlg.comboBox.currentText()
+
+            layout_modifie = QgsProject.instance().layoutManager().layoutByName(fichier_mise_en_page)
+
+            # map_item = layout_modifie.itemById("carte_principale")
+            # # map_item = layout_modifie.referenceMap()
+            #
+            # map_item.zoomToExtent(iface.mapCanvas().extent())
+            #
+            iface.openLayoutDesigner(layout_modifie)
+
+
+            self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
 
 
     def niveau_zoom(self):
@@ -1028,7 +1254,7 @@ class MapCEN:
 
         self.my_map1.refresh()
 
-        self.layout3 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN').clone()
+        self.layout3 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN | Carto MFU').clone()
         self.dlg.graphicsView.setScene(self.layout3)
         self.layout.refresh()
 

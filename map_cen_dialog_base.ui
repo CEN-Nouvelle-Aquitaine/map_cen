@@ -46,7 +46,7 @@ QWidget#tab_2{background-image: url(:/plugins/map_cen/Capture.png)}
 QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_2">
     <property name="styleSheet">
@@ -703,11 +703,11 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
        <bool>false</bool>
       </property>
       <property name="currentText">
-       <string notr="true"> </string>
+       <string notr="true"/>
       </property>
       <item>
        <property name="text">
-        <string> </string>
+        <string/>
        </property>
       </item>
      </widget>

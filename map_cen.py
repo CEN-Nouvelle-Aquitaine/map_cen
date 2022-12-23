@@ -132,20 +132,6 @@ class MapCEN:
         self.dlg = MapCENDialog()
         self.plugin_path = os.path.dirname(__file__)
 
-        # self.dlg.commandLinkButton.clicked.connect(self.actualisation_emprise)
-
-        #
-        # liste_couches_fonciercen =[]
-        #
-        # url_open = urllib.request.urlopen("https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")
-        # self.colonnes_flux = csv.DictReader(io.TextIOWrapper(url_open, encoding='utf8'), delimiter=';')
-        #
-        # for row in self.colonnes_flux:
-        #     if row['categorie'] == 'fonciercen':
-        #         liste_couches_fonciercen.append(row['Nom_couche_plugin'])
-        #
-        # self.dlg.comboBox.addItems(liste_couches_fonciercen)
-
 
         self.dlg.commandLinkButton.clicked.connect(self.chargement_qpt)
 
@@ -194,6 +180,7 @@ class MapCEN:
         for i, filename in enumerate(mises_en_page):
             nom_fichier = os.path.basename(filename)
             self.dlg.comboBox.addItem(nom_fichier)
+
 
 
     # noinspection PyMethodMayBeStatic
@@ -563,7 +550,6 @@ class MapCEN:
             rule.setLabel(label)
             rule.setFilterExpression(expression)
             symbol_layer = rule.symbol().symbolLayer(0)
-            print(symbol_layer)
             color = symbol_layer.color()
             generator = QgsGeometryGeneratorSymbolLayer.create({})
             generator.setSymbolType(QgsSymbol.Marker)
@@ -609,7 +595,7 @@ class MapCEN:
 
         project = QgsProject.instance()
         self.manager = project.layoutManager()
-        layout_name = 'Mise en page automatique MapCEN | Carto MFU'
+        layout_name = 'Mise en page automatique MapCEN (MFU)'
         layouts_list = self.manager.printLayouts()
         # Just 4 debug
         # remove any duplicate layouts
@@ -634,7 +620,6 @@ class MapCEN:
 
 
         ## Add map to layout
-        print("Adding map")
         self.my_map1 = QgsLayoutItemMap(self.layout)
 
         # Charger une carte vide
@@ -692,8 +677,6 @@ class MapCEN:
 
 
         ## Ajout de la legende :
-        print((u"Adding legend"))
-
         legend = QgsLayoutItemLegend(self.layout)
         # legend.setTitle('Legende')
         legend.adjustBoxSize()
@@ -768,7 +751,6 @@ class MapCEN:
 
 
         ## Ajout de l'échelle à la mise en page
-        print((u"Adding scale bar"))
         self.scalebar = QgsLayoutItemScaleBar(self.layout)
         self.scalebar.setStyle('Single Box')
         self.scalebar.setLinkedMap(self.my_map1)
@@ -784,7 +766,6 @@ class MapCEN:
 
 
         # ajout de la fleche du Nord
-        print((u"Add north arrow"))
         north = QgsLayoutItemPicture(self.layout)
         north.setPicturePath(self.plugin_path + "/NorthArrow_02.svg")
         self.layout.addLayoutItem(north)
@@ -853,7 +834,7 @@ class MapCEN:
 
     def zoom_to_layer(self):
 
-        self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN | Carto MFU').clone()
+        self.layout2 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (MFU)').clone()
         self.dlg.graphicsView.setScene(self.layout2)
 
 
@@ -863,7 +844,7 @@ class MapCEN:
         if fileName:
             dossier_sauvegarde = fileName[0]
 
-        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN | Carto MFU')
+        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (MFU)')
 
         self.layout.renderContext().setDpi(300)
 
@@ -876,6 +857,16 @@ class MapCEN:
         # print(result_png)  # 0 = export réussi !
 
     def liste_couche_template(self):
+
+
+        if self.dlg.comboBox.currentText() == "1. Modèle standard carto A4 (consolidé).qpt":
+            self.dlg.lineEdit_4.setEnabled(True)
+            self.dlg.mComboBox_2.setEnabled(True)
+        else:
+            self.dlg.lineEdit_4.setEnabled(False)
+            self.dlg.mComboBox_2.setEnabled(False)
+
+
 
         self.dlg.mComboBox_2.clear()
 
@@ -911,18 +902,12 @@ class MapCEN:
 
                         ## Add map to layout
                         self.map_modele_test = QgsLayoutItemMap(layout)
-
                         # Charger une carte vide
                         self.map_modele_test.setRect(20, 20, 20, 20)
-
-                        # self.map_modele_test.setLayers([self.layer, self.fond])
-
                         # Mettre le canvas courant comme emprise
                         self.map_modele_test.setExtent(iface.mapCanvas().extent())
-
                         # Position de la carte dans le composeur
                         self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
-
                         # on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
                         self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
 
@@ -931,7 +916,6 @@ class MapCEN:
                         self.map_modele_test.setBackgroundColor(QColor(255, 255, 255, 255))
                         self.map_modele_test.setFrameEnabled(True)
                         layout.addLayoutItem(self.map_modele_test)
-
                         self.map_modele_test.setId("carte_principale")
 
                         ## Ajout d'un titre à la mise en page
@@ -948,7 +932,6 @@ class MapCEN:
                         title.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
 
 
-
                         ## Ajout d'un sous titre à la mise en page
                         subtitle = QgsLayoutItemLabel(layout)
                         layout.addLayoutItem(subtitle)
@@ -962,7 +945,6 @@ class MapCEN:
                         subtitle.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
 
 
-
                         ## Ajout du logo CEN NA en haut à gauche de la page
                         logo = QgsLayoutItemPicture(layout)
                         logo.setResizeMode(QgsLayoutItemPicture.Zoom)
@@ -974,8 +956,6 @@ class MapCEN:
 
 
                         ## Ajout de la legende :
-
-
                         legend = QgsLayoutItemLegend(layout)
 
                         legend.setId('legende_model1')
@@ -1009,7 +989,7 @@ class MapCEN:
 
                         # disable auto-update
                         legend.setAutoUpdateModel(False)
-
+                        legend.setLegendFilterByMapEnabled(True)
                         # legend model
                         model = legend.model()
 
@@ -1020,7 +1000,6 @@ class MapCEN:
                         for layer_name in layers_to_remove:
                             # find layer in project
                             layer = project.mapLayersByName(layer_name)[0]
-                            print(layer)
                             # get layer tree layer instance of layer
                             layertreelayer = root.findLayer(layer.id())
 
@@ -1035,36 +1014,47 @@ class MapCEN:
                             else:
                                 root_group.removeLayer(layer)
 
+
+                        legend.setEqualColumnWidth(True)
+                        legend.setSplitLayer(True)
+                        legend.setColumnSpace(5)
+                        legend.rstyle(QgsLegendStyle.Title).setMargin(1.5)  # 1 mm
+                        legend.rstyle(QgsLegendStyle.Group).setMargin(QgsLegendStyle.Top, 3)
+                        legend.rstyle(QgsLegendStyle.Subgroup).setMargin(QgsLegendStyle.Top, 3)
+
                         legend.adjustBoxSize()
                         layout.refresh()
 
-
-
-                        # legend = [i for i in layout.items() if isinstance(i, QgsLayoutItemLegend)][0]
-                        # legend.model().rootGroup().removeLayer(map_layer_to_remove)
-                        # legend.setLegendFilterByMapEnabled(True)
-
                         legend.updateLegend()
-
-
-
-                        # root = QgsLayerTree()
-                        # root.addLayer(self.layer).setUseLayerName(False)
-                        # root.addLayer(self.layer).setName("Types de maîtrise")
-                        #
-                        # legend.updateLegend()
-
-                        # legend.setLegendFilterByMapEnabled(True)
 
                         legend.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
 
-                        # legend.setWrapString("*")
-
+                        # try:
+                        #     layout_clone
+                        # except:
+                        #     layout_clone = QgsProject.instance().layoutManager().layoutByName(
+                        #         '1. Modèle standard carto A4 (consolidé).qpt')  # je ne sais pas pourquoi il faut que je redéfinisse une variable pour layout mais autrement ça ne fonctionne pas
                         #
-                        # layer_to_remove = self.fond
-                        # legend.model().rootGroup().removeLayer(layer_to_remove)
+                        # # Retrieve width & height values of map item
+                        # legend_item = [i for i in layout_clone.items() if isinstance(i, QgsLayoutItemLegend)][0]
+                        # legend_height = legend_item.sizeWithUnits().height()
+                        # legend_width = legend_item.sizeWithUnits().width()
+                        #
+                        # print(legend_height)
+                        #
+                        # if legend_height <= 42:
+                        #     legend.setColumnCount(1)
+                        # elif legend_height > 42 and legend_height <= 84:
+                        #     legend.setColumnCount(2)
+                        # elif legend_height > 84 and legend_height <= 126:
+                        #     legend.setColumnCount(3)
+                        # elif legend_height > 126 or legend_width > 195:
+                        #     legend.setColumnCount(1)
+                        #     QMessageBox.question(iface.mainWindow(), u"Attention !",
+                        #                          "Le nombre d'éléments à intégrer à la légende est trop important pour être harmonisé automatiquement. Veuillez disposer les élements de légende manuellement",
+                        #                          QMessageBox.Ok)
 
-
+                        # legend.setWrapString("*")
 
 
                         ## Ajout de l'échelle à la mise en page
@@ -1114,6 +1104,11 @@ class MapCEN:
 
 
                     if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A3_paysage_simple.qpt":
+                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
+                        map_item.setExtent(iface.mapCanvas().extent())
+                        map_item.attemptMove(QgsLayoutPoint(7.5, 33, QgsUnitTypes.LayoutMillimeters))
+                        map_item.attemptResize(QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters))
+
                         ## Ajout d'un titre à la mise en page
                         title = QgsLayoutItemLabel(layout)
                         layout.addLayoutItem(title)
@@ -1125,7 +1120,6 @@ class MapCEN:
                         title.adjustSizeToText()
                         title.setHAlign(Qt.AlignCenter)
                         title.setVAlign(Qt.AlignVCenter)
-                        print(title.hAlign())
                         title.setHAlign(160)
 
                         ## Ajout d'un sous titre à la mise en page
@@ -1152,6 +1146,11 @@ class MapCEN:
                         # self.scalebar_qpt.setFixedSize(QgsLayoutSize(95, 15))
 
                     if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
+                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
+                        map_item.setExtent(iface.mapCanvas().extent())
+                        map_item.attemptMove(QgsLayoutPoint(5, 40.642, QgsUnitTypes.LayoutMillimeters))
+                        map_item.attemptResize(QgsLayoutSize(287, 315, QgsUnitTypes.LayoutMillimeters))
+
                         ## Ajout d'un titre à la mise en page
                         title = QgsLayoutItemLabel(layout)
                         layout.addLayoutItem(title)
@@ -1173,6 +1172,11 @@ class MapCEN:
                         layout.addItem(subtitle)
 
                     if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A4_paysage_simple.qpt":
+                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
+                        map_item.setExtent(iface.mapCanvas().extent())
+                        map_item.attemptMove(QgsLayoutPoint(5, 23.5, QgsUnitTypes.LayoutMillimeters))
+                        map_item.attemptResize(QgsLayoutSize(287, 130, QgsUnitTypes.LayoutMillimeters))
+
                         ## Ajout d'un titre à la mise en page
                         title = QgsLayoutItemLabel(layout)
                         layout.addLayoutItem(title)
@@ -1195,6 +1199,12 @@ class MapCEN:
 
 
                     if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A4_portrait_simple.qpt":
+
+                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
+                        map_item.setExtent(iface.mapCanvas().extent())
+                        map_item.attemptMove(QgsLayoutPoint(3, 30, QgsUnitTypes.LayoutMillimeters))
+                        map_item.attemptResize(QgsLayoutSize(204, 183, QgsUnitTypes.LayoutMillimeters))
+
                         ## Ajout d'un titre à la mise en page
                         title = QgsLayoutItemLabel(layout)
                         layout.addLayoutItem(title)
@@ -1215,8 +1225,9 @@ class MapCEN:
                         subtitle.adjustSizeToText()
                         layout.addItem(subtitle)
 
+                    self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
+
                     existing_layout = project.layoutManager().layoutByName(layout.name())
-                    print(existing_layout)
                     if existing_layout:
                         project.layoutManager().removeLayout(existing_layout)
 
@@ -1236,7 +1247,6 @@ class MapCEN:
             iface.openLayoutDesigner(layout_modifie)
 
 
-            self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
 
 
     def niveau_zoom(self):
@@ -1254,11 +1264,9 @@ class MapCEN:
 
         self.my_map1.refresh()
 
-        self.layout3 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN | Carto MFU').clone()
+        self.layout3 = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (MFU)').clone()
         self.dlg.graphicsView.setScene(self.layout3)
         self.layout.refresh()
-
-        print(self.my_map1.scale())
 
         self.bar_echelle_auto(self.my_map1, self.scalebar)
 

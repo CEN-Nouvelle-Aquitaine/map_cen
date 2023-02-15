@@ -26,7 +26,6 @@ from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from PyQt5 import *
 from PyQt5.QtCore import Qt
-
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
@@ -41,6 +40,9 @@ import csv
 import io
 
 from datetime import date
+
+
+from .carto_perimetres_ecologiques import module_perim_eco
 
 
 class Popup(QWidget):
@@ -112,6 +114,8 @@ class MapCEN:
         """
         # Save reference to the QGIS interface
         self.iface = iface
+
+
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
@@ -130,14 +134,22 @@ class MapCEN:
         self.actions = []
         self.menu = self.tr(u'&MapCEN')
         self.dlg = MapCENDialog()
+
+        self.module_perim_eco = module_perim_eco()
+        self.module_perim_eco.dlg = self.dlg
+
+        module_perim_eco.dlg = self.dlg
         self.plugin_path = os.path.dirname(__file__)
 
 
         self.dlg.commandLinkButton.clicked.connect(self.chargement_qpt)
 
-        self.dlg.commandLinkButton_2.clicked.connect(self.initialisation)
+        self.dlg.comboBox_3.currentIndexChanged.connect(self.initialisation)
         self.dlg.commandLinkButton_3.clicked.connect(self.popup_info)
+        self.dlg.pushButton.clicked.connect(self.ajout_couches)
         self.dlg.commandLinkButton_4.clicked.connect(self.actualisation_emprise)
+
+
         self.dlg.commandLinkButton_5.clicked.connect(self.ouverture_composeur)
         self.dlg.commandLinkButton_6.clicked.connect(self.popup_resolution)
 
@@ -147,15 +159,19 @@ class MapCEN:
         self.dlg.graphicsView.scale(2.1,2.1)
         self.dlg.graphicsView.setMouseTracking(True)
 
-        self.dlg.commandLinkButton_2.setEnabled(True)
         # self.dlg.lineEdit.setEnabled(False)
-        self.dlg.commandLinkButton_4.setEnabled(False)
-        self.dlg.commandLinkButton_5.setEnabled(False)
+        # self.dlg.commandLinkButton_4.setEnabled(False)
+        # self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.horizontalSlider.valueChanged.connect(self.niveau_zoom)
         self.dlg.comboBox_2.currentIndexChanged.connect(self.choix_dept)
 
         self.dlg.comboBox.currentIndexChanged.connect(self.liste_couche_template)
 
+        self.dlg.mComboBox_3.hide()
+
+        self.dlg.comboBox_3.addItems(["Localisation de sites", "Périmètres écologiques"])
+
+        self.dlg.comboBox_3.model().item(0).setEnabled(False)
         # self.dlg.lineEdit.textChanged.connect(self.onTextChanged)
 
         self.dlg.setMouseTracking(True)
@@ -327,25 +343,35 @@ class MapCEN:
 
     def initialisation(self):
 
-        self.dlg.commandLinkButton_2.setEnabled(False)
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques" :
 
+            self.module_perim_eco.initialisation2()
 
+        else:
+
+            self.dlg.mComboBox_3.hide()
+            self.dlg.label_15.hide()
+
+        # Lecture de l'authentification QGIS. Si pas d'authentification alors message d'erreur :
         managerAU = QgsApplication.authManager()
         self.k = managerAU.availableAuthMethodConfigs().keys()
-        # print( k )
+        # print(self.k)
         if len(list(self.k)) == 0:
-            QMessageBox.question(iface.mainWindow(), u"Attention !", "Veuillez ajouter une entrée de configuration d'authentification dans QGIS pour accéder aux flux CEN-NA sécurisés par un mot de passe", QMessageBox.Ok)
+            QMessageBox.question(iface.mainWindow(), u"Attention !",
+                                 "Veuillez ajouter une entrée de configuration d'authentification dans QGIS pour accéder aux flux CEN-NA sécurisés par un mot de passe",
+                                 QMessageBox.Ok)
 
-
-        uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:site_gere_poly&SRSNAME=EPSG:4326&authcfg=', list(self.k)[0], '&request=GetFeature']
+        # La couche "site géré" est une donnée protégée donc lecture de l'entrée d'authentification pour pouvoir la charger dans QGIS :
+        uri = ['https://opendata.cen-nouvelle-aquitaine.org/geoserver/fonciercen/wfs?VERSION=1.0.0&TYPENAME=fonciercen:site_gere_poly&SRSNAME=EPSG:4326&authcfg=',list(self.k)[0], '&request=GetFeature']
         uri = ''.join(uri)
 
         self.vlayer = QgsVectorLayer(uri, "Sites gérés CEN-NA", "WFS")
 
         if QgsProject.instance().mapLayersByName("Sites gérés CEN-NA"):
-            self.vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
-            iface.messageBar().pushMessage("Couche 'Sites gérés CEN-NA'", "La couche 'Sites gérés CEN-NA est déjà chargée dans le canvas QGIS", level=Qgis.Success, duration=5)
-
+            # self.vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
+            iface.messageBar().pushMessage("Couche 'Sites gérés CEN-NA'",
+                                           "La couche 'Sites gérés CEN-NA est déjà chargée dans le canvas QGIS",
+                                           level=Qgis.Success, duration=5)
         else:
             QgsProject.instance().addMapLayer(self.vlayer)
         if not self.vlayer:
@@ -354,7 +380,6 @@ class MapCEN:
                                  QMessageBox.Ok)
 
         self.listes_sites_MFU = []
-
 
         for p in self.vlayer.getFeatures():
             self.listes_sites_MFU.append(str(p.attributes()[2]))
@@ -367,8 +392,7 @@ class MapCEN:
         # self.dlg.mComboBox.setLineEdit(self.dlg.lineEdit)
         self.dlg.mComboBox.addItems(self.listes_sites_MFU)
 
-
-        self.listes_sites_MFU = []
+        self.listes_sites_MFU.clear()
 
         dpts_NA = ["16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
                    "33 - Gironde", "40 - Landes", "47 - Lot", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
@@ -377,11 +401,8 @@ class MapCEN:
         self.dlg.comboBox_2.addItems(dpts_NA)
 
 
-
-        self.ajout_couches()
-
-
     def ajout_couches(self):
+
 
         ### -------------------- Chargement des sites fonciercen ---------------------- ###
 
@@ -420,14 +441,21 @@ class MapCEN:
         symbol = single_symbol_renderer.symbol()
         symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
 
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques" :
+
+            self.module_perim_eco.chargement_perim_eco()
+
+        else:
+            print("test")
+
         self.depts_NA.triggerRepaint()
 
-        self.activation_boutons()
+        # self.actualisation_emprise()
 
     def activation_boutons(self):
 
         # self.dlg.lineEdit.setEnabled(True)
-        self.dlg.commandLinkButton_4.setEnabled(True)
+        # self.dlg.commandLinkButton_4.setEnabled(True)
         self.dlg.commandLinkButton_5.setEnabled(True)
         self.dlg.radioButton.setEnabled(True)
         self.dlg.radioButton_2.setEnabled(True)
@@ -520,6 +548,12 @@ class MapCEN:
         parent.insertChildNode(-1, myClone)
         parent.removeChildNode(fond_carte)
 
+        # On place la couche "Parcelles MFU" en première dans le gestionnaire des couches
+        parcelles_MFU = root.findLayer(self.layer.id())
+        myClone = parcelles_MFU.clone()
+        parent = parcelles_MFU.parent()
+        parent.insertChildNode(0, myClone)
+        parent.removeChildNode(parcelles_MFU)
 
         # ### Zoom sur emprise du ou des sites CEN selectionnés:
 
@@ -577,7 +611,6 @@ class MapCEN:
             expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
 
 
-
         self.mise_en_page()
 
 
@@ -625,7 +658,16 @@ class MapCEN:
         # Charger une carte vide
         self.my_map1.setRect(20, 20, 20, 20)
 
-        self.my_map1.setLayers([self.layer, self.fond])
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
+
+            for item in self.module_perim_eco.get_test():
+                for layer in QgsProject.instance().mapLayersByName(item['Nom_couche_plugin'][0]):
+                    self.my_map1.setLayers(layer)
+            # self.my_map1.setLayers([self.layer, self.fond])
+
+        else:
+
+            self.my_map1.setLayers([self.layer, self.fond])
 
 
         # Mettre le canvas courant comme emprise

@@ -43,7 +43,7 @@ from datetime import date
 
 
 from .carto_perimetres_ecologiques import module_perim_eco
-
+from .carto_localisation_generale import module_loc_generale
 
 class Popup(QWidget):
     def __init__(self, parent=None):
@@ -138,7 +138,10 @@ class MapCEN:
         self.module_perim_eco = module_perim_eco()
         self.module_perim_eco.dlg = self.dlg
 
-        module_perim_eco.dlg = self.dlg
+        self.module_loc_generale = module_loc_generale()
+        self.module_loc_generale.dlg = self.dlg
+
+        # module_perim_eco.dlg = self.dlg
         self.plugin_path = os.path.dirname(__file__)
 
 
@@ -169,7 +172,7 @@ class MapCEN:
 
         self.dlg.mComboBox_3.hide()
 
-        self.dlg.comboBox_3.addItems(["Localisation de sites", "Périmètres écologiques"])
+        self.dlg.comboBox_3.addItems(["MFU", "Localisation de sites", "Périmètres écologiques"])
 
         self.dlg.comboBox_3.model().item(0).setEnabled(False)
         # self.dlg.lineEdit.textChanged.connect(self.onTextChanged)
@@ -441,7 +444,7 @@ class MapCEN:
         symbol = single_symbol_renderer.symbol()
         symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
 
-        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques" :
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
 
             self.module_perim_eco.chargement_perim_eco()
 
@@ -610,9 +613,12 @@ class MapCEN:
         else:
             expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
 
-
-        self.mise_en_page()
-
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
+            self.module_perim_eco.mise_en_page()
+        elif self.dlg.comboBox_3.currentText() == "Localisation de sites":
+            self.module_loc_generale.mise_en_page()
+        else:
+            self.mise_en_page()
 
 
     def mise_en_page(self):
@@ -658,16 +664,8 @@ class MapCEN:
         # Charger une carte vide
         self.my_map1.setRect(20, 20, 20, 20)
 
-        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
 
-            for item in self.module_perim_eco.get_test():
-                for layer in QgsProject.instance().mapLayersByName(item['Nom_couche_plugin'][0]):
-                    self.my_map1.setLayers(layer)
-            # self.my_map1.setLayers([self.layer, self.fond])
-
-        else:
-
-            self.my_map1.setLayers([self.layer, self.fond])
+        self.my_map1.setLayers([self.layer, self.fond])
 
 
         # Mettre le canvas courant comme emprise
@@ -684,7 +682,7 @@ class MapCEN:
         self.my_map1.setFrameEnabled(True)
         self.layout.addLayoutItem(self.my_map1)
 
-        self.my_map1.setId("carte_principale")
+        self.my_map1.setId("carte_principale_MFU")
         # print(self.my_map1.id())
 
         # --- create map item 2 (shapefile, raster 2, basemap)
@@ -867,8 +865,12 @@ class MapCEN:
     def ouverture_composeur(self):
 
         ###  -------------------- Automatisation de la mise en page ----------------------- ###
-
-        iface.openLayoutDesigner(self.layout)
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
+            iface.openLayoutDesigner(self.module_perim_eco.layout_carto_perim_eco)
+        elif self.dlg.comboBox_3.currentText() == "Localisation de sites":
+            iface.openLayoutDesigner(self.module_loc_generale.layout_carto_generale)
+        else:
+            iface.openLayoutDesigner(self.layout)
 
         #### Pour ajouter deuxieme carte au composer d'impression:
         ##https://gis.stackexchange.com/questions/331723/display-two-different-maps-with-different-layers-in-one-layout-in-pyqgis-proble

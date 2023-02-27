@@ -20,83 +20,25 @@ import os.path
 
 from datetime import date
 
-class module_perim_eco():
+
+class module_loc_generale():
 
     def __init__(self):
         self.dlg = None
-        self.test = None
-        self.layout_carto_perim_eco = None
-
-
-    def initialisation2(self):
-
-        #On lit le fichier csv contenant les flux CEN sous forme de dictionnaire et on en extrait tous les noms techniques correspondant à la catégorie "Périmètres écologiques":
-        url_open = urllib.request.urlopen("https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")
-
-        #The error message "I/O operation on closed file" indicates that we're trying to read from a file-like object that has already been closed.
-        #When using urllib.request.urlopen() to fetch the CSV data but the file-like object returned by urlopen() is being closed when the csvReader list is created. This means that when we try to use csvReader again, the file-like object is no longer open and we can't read from it.
-        # To avoid this issue, you can fetch the CSV data and store it in a separate variable before using it to create the csvReader:
-
-        flux = url_open.read().decode('utf-8')
-
-        #problème lors d'une seconde utilisation du dictionnaire csvReader; solution: https://stackoverflow.com/questions/20507228/python-how-do-i-use-dictreader-twice
-        csvReader = list(csv.DictReader(io.StringIO(flux), delimiter=';'))
-
-        #on filtre la liste des dictionnaires afin de ne garder que les données correspondantes à la catégorie "Périmètres écologiques:
-        filtered_rows = [row for row in csvReader if row['categorie'] == 'Périmètres écologiques']
-
-        nom_perim_eco = []
-
-        for item in filtered_rows:
-            #On récupère tous les noms des flux pour les ajouter à une liste qui servira ensuite à populer la combobox_3
-            nom_perim_eco.append(item['Nom_couche_plugin'])
-
-        #On fait apparaitre la comboBox lorsque le choix "périmetre eco" est sélectionné (idem pour le label_15) :
-        if not self.dlg.mComboBox_3.isVisible():
-            self.dlg.mComboBox_3.show()
-
-        self.dlg.mComboBox_3.addItems(nom_perim_eco)
-
-        self.dlg.label_15.setText("Périmètres écologiques :")
-        self.dlg.label_15.show()
-
-
-    def chargement_perim_eco(self):
-
-        # On lit le fichier csv contenant les flux CEN sous forme de dictionnaire et on en extrait tous les noms techniques correspondant à la catégorie "Périmètres écologiques":
-        url_open = urllib.request.urlopen(
-            "https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")
-
-        # The error message "I/O operation on closed file" indicates that we're trying to read from a file-like object that has already been closed.
-        # When using urllib.request.urlopen() to fetch the CSV data but the file-like object returned by urlopen() is being closed when the csvReader list is created. This means that when we try to use csvReader again, the file-like object is no longer open and we can't read from it.
-        # To avoid this issue, you can fetch the CSV data and store it in a separate variable before using it to create the csvReader:
-
-        flux = url_open.read().decode('utf-8')
-
-        # problème lors d'une seconde utilisation du dictionnaire csvReader; solution: https://stackoverflow.com/questions/20507228/python-how-do-i-use-dictreader-twice
-        self.csvReader = list(csv.DictReader(io.StringIO(flux), delimiter=';'))
-
-        #On charge les sites gérés :
-        self.test = [row for row in self.csvReader if row['Nom_couche_plugin'] in self.dlg.mComboBox_3.checkedItems()]
-
-        for item in self.test:
-            item.update({"version": "1.0.0", "request": "GetFeature"})
-            url = item['url']
-            typename = item['nom_technique']
-            request = item['request']
-            version = item['version']
-            final_url = f"{url}VERSION={version}&TYPENAME={typename}&request={request}"
-            uri = final_url
-
-            self.perim_eco_layer = QgsVectorLayer(uri, item['Nom_couche_plugin'], "WFS")
-            self.perim_eco_layer.loadNamedStyle(os.path.dirname(__file__) + '/styles_couches/' + item['Nom_couche_plugin'] +'.qml')
-            self.perim_eco_layer.triggerRepaint()
-
-            QgsProject.instance().addMapLayer(self.perim_eco_layer)
-
-
+        self.layout_carto_generale = None
 
     def mise_en_page(self):
+
+        layer = QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU")[0]
+        vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
+        depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
+
+        if self.dlg.radioButton.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
+        elif self.dlg.radioButton_2.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
+        elif self.dlg.radioButton_3.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
 
         self.dlg.horizontalSlider.setValue(0)
 
@@ -109,17 +51,29 @@ class module_perim_eco():
 
         project = QgsProject.instance()
         self.manager = project.layoutManager()
-        layout_name = 'Mise en page automatique MapCEN (Périmètres écologiques)'
+        layout_name = 'Mise en page automatique MapCEN (Carto de localisation générale)'
         layouts_list = self.manager.printLayouts()
         # Just 4 debug
         # remove any duplicate layouts
         for self.layout in layouts_list:
             if self.layout.name() == layout_name:
                 self.manager.removeLayout(self.layout)
+            #     reply = QMessageBox.question(None, (u'Delete layout...'),
+            #                                  (
+            #                                      u"There's already a layout named '%s'\nDo you want to delete it?")
+            #                                  % layout_name,
+            #                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            #     if reply == QMessageBox.No:
+            #         return
+            #     else:
+            #         manager.removeLayout(layout)
+            #         print((u"Previous layout names '%s' removed... ") % layout_name)
 
         self.layout = QgsPrintLayout(project)
         self.layout.initializeDefaults()
+        # manager.addLayout(layout)
         self.layout.setName(layout_name)
+
 
         ## Add map to layout
         self.my_map1 = QgsLayoutItemMap(self.layout)
@@ -128,15 +82,11 @@ class module_perim_eco():
         self.my_map1.setRect(20, 20, 20, 20)
 
 
-        for item in [row for row in self.csvReader if row['Nom_couche_plugin'] in self.dlg.mComboBox_3.checkedItems()]:
-            for layer in QgsProject.instance().mapLayersByName(item['Nom_couche_plugin'][0]):
-                self.my_map1.setLayers(layer)
+        self.my_map1.setLayers([layer, fond_carte])
 
 
         # Mettre le canvas courant comme emprise
         self.my_map1.setExtent(iface.mapCanvas().extent())
-
-        self.my_map1.setScale(self.my_map1.scale() * 3)
 
         # Position de la carte dans le composeur
         self.my_map1.attemptMove(QgsLayoutPoint(5, 29, QgsUnitTypes.LayoutMillimeters))
@@ -149,8 +99,37 @@ class module_perim_eco():
         self.my_map1.setFrameEnabled(True)
         self.layout.addLayoutItem(self.my_map1)
 
-        self.my_map1.setId("carte_principale_perim_eco")
+        self.my_map1.setId("carte_principale_loc_generale")
         # print(self.my_map1.id())
+
+        # --- create map item 2 (shapefile, raster 2, basemap)
+
+        my_map2 = QgsLayoutItemMap(self.layout)
+        my_map2.setRect(20, 20, 20, 20)
+        my_map2.setPos(228, 27)
+        my_map2.setFrameEnabled(False)
+
+        my_map2.setLayers([vlayer, depts_NA])
+
+        ## Ajustement de l'emprise de la couche depts_CEN-NA au CRS 2154 :
+
+        crsSrc = QgsCoordinateReferenceSystem("EPSG:4326")
+
+        # recherche du CRS du projet pour réaliser transformation (normalement 2154):
+        crsDest = QgsCoordinateReferenceSystem(QgsCoordinateReferenceSystem("EPSG:2154"))
+        transformContext = QgsProject.instance().transformContext()
+        xform = QgsCoordinateTransform(crsSrc, crsDest, transformContext)
+
+        # forward transformation: src -> dest
+        extent = xform.transform(depts_NA.extent())
+
+
+        my_map2.setExtent(extent)
+        my_map2.setScale(30000000)
+
+        my_map2.attemptResize(QgsLayoutSize(65, 65, QgsUnitTypes.LayoutMillimeters))
+
+        self.layout.addLayoutItem(my_map2)
 
 
         ## Ajout de la legende :
@@ -160,16 +139,9 @@ class module_perim_eco():
         legend.setFrameEnabled(False)
         legend.setAutoUpdateModel(False)
 
-        # root = QgsLayerTree()
-        # root.addLayer(layer).setUseLayerName(False)
-        # root.addLayer(layer).setName("Périmètres écologiques")
-
-        root = legend.model().rootGroup()
-        group_perim_eco = root.addGroup("Périmètres écologiques")
-
-        for item in [row for row in self.csvReader if row['Nom_couche_plugin'] in self.dlg.mComboBox_3.checkedItems()]:
-            for layer in QgsProject.instance().mapLayersByName(item['Nom_couche_plugin'][0]):
-                group_perim_eco.addLayer(layer)
+        root = QgsLayerTree()
+        root.addLayer(layer).setUseLayerName(False)
+        root.addLayer(layer).setName("Types de maîtrise")
 
         legend.updateLegend()
 
@@ -177,15 +149,20 @@ class module_perim_eco():
         self.layout.addItem(legend)
         legend.setLinkedMap(self.my_map1)
 
-        # layer_to_remove = self.fond
-        # legend.model().rootGroup().removeLayer(layer_to_remove)
+        layer_to_remove = fond_carte
+        legend.model().rootGroup().removeLayer(layer_to_remove)
 
         legend.attemptMove(QgsLayoutPoint(7, 165, QgsUnitTypes.LayoutMillimeters))
+
+        # legend.setColumnCount(3)
 
         legend.setColumnCount(2)
         legend.setEqualColumnWidth(False)
         legend.setSplitLayer(True)
         legend.setColumnSpace(10)
+
+        legend.setWrapString("*")
+
 
         legend.setWrapString("*")
 
@@ -198,7 +175,7 @@ class module_perim_eco():
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str(', '.join(self.dlg.mComboBox.checkedItems()))
+        titre = str(', '.join(self.dlg.mComboBox.checkedItems()) + " (" + vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.attemptMove(QgsLayoutPoint(5, 6, QgsUnitTypes.LayoutMillimeters))
@@ -212,7 +189,7 @@ class module_perim_eco():
         ## Ajout d'un sous-titre à la mise en page
         subtitle = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(subtitle)
-        titre = str("Périmètres d'intérêts écologiques à proximité des sites (" + date_du_jour +")")
+        titre = str("Carto de localisation générale " + date_du_jour)
         subtitle.setText(titre)
         subtitle.setFont(QFont("Calibri", 14))
         subtitle.attemptMove(QgsLayoutPoint(5, 14, QgsUnitTypes.LayoutMillimeters))
@@ -276,16 +253,12 @@ class module_perim_eco():
         credit_text.setVAlign(Qt.AlignVCenter)
         # credit_text.adjustSizeToText()
 
-
         # Finally add layout to the project via its manager
         self.manager.addLayout(self.layout)
 
+        self.layout_carto_generale = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (Carto de localisation générale)').clone()
 
-        self.layout_carto_perim_eco = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (Périmètres écologiques)').clone()
-
-        self.dlg.graphicsView.setScene(self.layout_carto_perim_eco)
+        self.dlg.graphicsView.setScene(self.layout_carto_generale)
 
 
-    def get_test(self):
-        return self.test
 

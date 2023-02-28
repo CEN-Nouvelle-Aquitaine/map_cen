@@ -24,7 +24,6 @@ class module_perim_eco():
 
     def __init__(self):
         self.dlg = None
-        self.test = None
         self.layout_carto_perim_eco = None
 
 
@@ -279,8 +278,4 @@ class module_perim_eco():
         self.layout_carto_perim_eco = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (Périmètres écologiques)').clone()
 
         self.dlg.graphicsView.setScene(self.layout_carto_perim_eco)
-
-
-    def get_test(self):
-        return self.test
 

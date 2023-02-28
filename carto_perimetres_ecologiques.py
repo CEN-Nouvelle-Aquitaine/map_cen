@@ -97,6 +97,16 @@ class module_perim_eco():
 
     def mise_en_page(self):
 
+        vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
+        depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
+
+        if self.dlg.radioButton.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
+        elif self.dlg.radioButton_2.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
+        elif self.dlg.radioButton_3.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
+
         self.dlg.horizontalSlider.setValue(0)
 
         # ajout de la date, l'auteur, source etc...
@@ -134,7 +144,7 @@ class module_perim_eco():
         # Mettre le canvas courant comme emprise
         self.my_map1.setExtent(iface.mapCanvas().extent())
 
-        self.my_map1.setScale(self.my_map1.scale() * 3)
+        self.my_map1.setScale(self.my_map1.scale() * 4.5)
 
         # Position de la carte dans le composeur
         self.my_map1.attemptMove(QgsLayoutPoint(5, 29, QgsUnitTypes.LayoutMillimeters))
@@ -171,8 +181,9 @@ class module_perim_eco():
         self.layout.addItem(legend)
         legend.setLinkedMap(self.my_map1)
 
-        # layer_to_remove = self.fond
-        # legend.model().rootGroup().removeLayer(layer_to_remove)
+        legend.model().rootGroup().removeLayer(vlayer)
+        legend.model().rootGroup().removeLayer(fond_carte)
+        legend.model().rootGroup().removeLayer(depts_NA)
 
         legend.attemptMove(QgsLayoutPoint(7, 165, QgsUnitTypes.LayoutMillimeters))
 

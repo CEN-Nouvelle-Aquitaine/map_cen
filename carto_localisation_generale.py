@@ -34,12 +34,12 @@ class module_loc_generale():
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
         depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
 
-        # if self.dlg.radioButton.isChecked() == True:
-        #     fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
-        # elif self.dlg.radioButton_2.isChecked() == True:
-        #     fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
-        # elif self.dlg.radioButton_3.isChecked() == True:
-        #     fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
+        if self.dlg.radioButton.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
+        elif self.dlg.radioButton_2.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
+        elif self.dlg.radioButton_3.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
 
         self.dlg.horizontalSlider.setValue(0)
 
@@ -72,13 +72,13 @@ class module_loc_generale():
         self.my_map1.setRect(20, 20, 20, 20)
 
 
-        self.my_map1.setLayers([layer])
+        self.my_map1.setLayers([layer, fond_carte])
 
 
         # Mettre le canvas courant comme emprise
         self.my_map1.setExtent(iface.mapCanvas().extent())
 
-        self.my_map1.setScale(self.my_map1.scale() * 4)
+        self.my_map1.setScale(self.my_map1.scale() * 4.5)
 
 
         # Position de la carte dans le composeur
@@ -141,9 +141,9 @@ class module_loc_generale():
         legend.setLegendFilterByMapEnabled(True)
         self.layout.addItem(legend)
         legend.setLinkedMap(self.my_map1)
-        #
-        # layer_to_remove = fond_carte
-        # legend.model().rootGroup().removeLayer(layer_to_remove)
+
+        legend.model().rootGroup().removeLayer(fond_carte)
+        legend.model().rootGroup().removeLayer(vlayer)
 
         legend.attemptMove(QgsLayoutPoint(7, 165, QgsUnitTypes.LayoutMillimeters))
 
@@ -253,5 +253,36 @@ class module_loc_generale():
 
         self.dlg.graphicsView.setScene(self.layout_carto_generale)
 
-
-
+    #     self.highlight_features()
+    #
+    #
+    # # function that does the work of highlighting selected features
+    # def highlight_features(self):
+    #
+    #     # récupérer la couche active dans QGIS
+    #     layer = iface.activeLayer()
+    #
+    #     # créer une expression de filtre basée sur les IDs des entités sélectionnées
+    #     expression = "insee_dep IN ('{}')".format("','".join(self.dlg.comboBox_2.currentText()[0:2]))
+    #
+    #     # récupérer le symbole de remplissage de la couche
+    #     symbol = layer.renderer().symbol().clone()
+    #
+    #     # définir l'opacité du symbole de remplissage des entités sélectionnées à 0 (entièrement transparent)
+    #     symbol.symbolLayer(0).setOpacity(0)
+    #
+    #     # créer une règle de rendu pour les entités sélectionnées
+    #     rule_selected = QgsRuleBasedRenderer.Rule(symbol, filterExpression=expression)
+    #
+    #     # créer une règle de rendu par défaut pour toutes les autres entités
+    #     rule_default = QgsRuleBasedRenderer.Rule(layer.renderer().symbol().clone())
+    #
+    #     # créer un objet de rendu basé sur les règles de rendu créées
+    #     renderer = QgsRuleBasedRenderer(rule_default)
+    #     renderer.addChildRule(rule_selected)
+    #
+    #     # mettre à jour le rendu de la couche avec le rendu modifié
+    #     layer.setRenderer(renderer)
+    #
+    #     # forcer le rafraîchissement de l'affichage de la couche dans QGIS
+    #     layer.triggerRepaint()

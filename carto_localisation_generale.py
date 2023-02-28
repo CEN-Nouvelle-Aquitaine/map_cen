@@ -27,18 +27,19 @@ class module_loc_generale():
         self.dlg = None
         self.layout_carto_generale = None
 
+
     def mise_en_page(self):
 
         layer = QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU")[0]
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
         depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
 
-        if self.dlg.radioButton.isChecked() == True:
-            fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
-        elif self.dlg.radioButton_2.isChecked() == True:
-            fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
-        elif self.dlg.radioButton_3.isChecked() == True:
-            fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
+        # if self.dlg.radioButton.isChecked() == True:
+        #     fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
+        # elif self.dlg.radioButton_2.isChecked() == True:
+        #     fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
+        # elif self.dlg.radioButton_3.isChecked() == True:
+        #     fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
 
         self.dlg.horizontalSlider.setValue(0)
 
@@ -58,20 +59,9 @@ class module_loc_generale():
         for self.layout in layouts_list:
             if self.layout.name() == layout_name:
                 self.manager.removeLayout(self.layout)
-            #     reply = QMessageBox.question(None, (u'Delete layout...'),
-            #                                  (
-            #                                      u"There's already a layout named '%s'\nDo you want to delete it?")
-            #                                  % layout_name,
-            #                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            #     if reply == QMessageBox.No:
-            #         return
-            #     else:
-            #         manager.removeLayout(layout)
-            #         print((u"Previous layout names '%s' removed... ") % layout_name)
 
         self.layout = QgsPrintLayout(project)
         self.layout.initializeDefaults()
-        # manager.addLayout(layout)
         self.layout.setName(layout_name)
 
 
@@ -82,11 +72,14 @@ class module_loc_generale():
         self.my_map1.setRect(20, 20, 20, 20)
 
 
-        self.my_map1.setLayers([layer, fond_carte])
+        self.my_map1.setLayers([layer])
 
 
         # Mettre le canvas courant comme emprise
         self.my_map1.setExtent(iface.mapCanvas().extent())
+
+        self.my_map1.setScale(self.my_map1.scale() * 4)
+
 
         # Position de la carte dans le composeur
         self.my_map1.attemptMove(QgsLayoutPoint(5, 29, QgsUnitTypes.LayoutMillimeters))
@@ -140,17 +133,17 @@ class module_loc_generale():
         legend.setAutoUpdateModel(False)
 
         root = QgsLayerTree()
-        root.addLayer(layer).setUseLayerName(False)
-        root.addLayer(layer).setName("Types de maîtrise")
+        # root.addLayer(layer).setUseLayerName(False)
+        # root.addLayer(layer).setName("Types de maîtrise")
 
         legend.updateLegend()
 
         legend.setLegendFilterByMapEnabled(True)
         self.layout.addItem(legend)
         legend.setLinkedMap(self.my_map1)
-
-        layer_to_remove = fond_carte
-        legend.model().rootGroup().removeLayer(layer_to_remove)
+        #
+        # layer_to_remove = fond_carte
+        # legend.model().rootGroup().removeLayer(layer_to_remove)
 
         legend.attemptMove(QgsLayoutPoint(7, 165, QgsUnitTypes.LayoutMillimeters))
 
@@ -189,7 +182,7 @@ class module_loc_generale():
         ## Ajout d'un sous-titre à la mise en page
         subtitle = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(subtitle)
-        titre = str("Carto de localisation générale " + date_du_jour)
+        titre = str("Localisation générale (" + date_du_jour +")")
         subtitle.setText(titre)
         subtitle.setFont(QFont("Calibri", 14))
         subtitle.attemptMove(QgsLayoutPoint(5, 14, QgsUnitTypes.LayoutMillimeters))

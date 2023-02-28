@@ -59,9 +59,9 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>80</y>
+       <y>70</y>
        <width>331</width>
-       <height>521</height>
+       <height>541</height>
       </rect>
      </property>
      <property name="font">
@@ -120,7 +120,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
         <item>
          <widget class="QRadioButton" name="radioButton_2">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="text">
            <string>OpenStreetMap</string>
@@ -130,7 +130,7 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
         <item>
          <widget class="QRadioButton" name="radioButton_3">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="text">
            <string>Scan 25 IGN</string>
@@ -167,10 +167,13 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       </property>
      </widget>
      <widget class="QCommandLinkButton" name="commandLinkButton_4">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>50</x>
-        <y>440</y>
+        <y>460</y>
         <width>221</width>
         <height>51</height>
        </rect>

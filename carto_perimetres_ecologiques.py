@@ -106,7 +106,6 @@ class module_perim_eco():
         # QgsProject.instance().layerTreeRoot().findLayer(self.vlayer.id()).setItemVisibilityChecked(False)
 
         ## Ajout de la mise en page au composeur de carte:
-
         project = QgsProject.instance()
         self.manager = project.layoutManager()
         layout_name = 'Mise en page automatique MapCEN (Périmètres écologiques)'
@@ -159,10 +158,6 @@ class module_perim_eco():
         legend.adjustBoxSize()
         legend.setFrameEnabled(False)
         legend.setAutoUpdateModel(False)
-
-        # root = QgsLayerTree()
-        # root.addLayer(layer).setUseLayerName(False)
-        # root.addLayer(layer).setName("Périmètres écologiques")
 
         root = legend.model().rootGroup()
         group_perim_eco = root.addGroup("Périmètres écologiques")

@@ -162,9 +162,6 @@ class MapCEN:
         self.dlg.graphicsView.scale(2.1,2.1)
         self.dlg.graphicsView.setMouseTracking(True)
 
-        # self.dlg.lineEdit.setEnabled(False)
-        # self.dlg.commandLinkButton_4.setEnabled(False)
-        # self.dlg.commandLinkButton_5.setEnabled(False)
         self.dlg.horizontalSlider.valueChanged.connect(self.niveau_zoom)
         self.dlg.comboBox_2.currentIndexChanged.connect(self.choix_dept)
 
@@ -406,6 +403,7 @@ class MapCEN:
 
     def ajout_couches(self):
 
+        self.dlg.commandLinkButton_4.setEnabled(True)
 
         ### -------------------- Chargement des sites fonciercen ---------------------- ###
 
@@ -452,17 +450,6 @@ class MapCEN:
             print("test")
 
         self.depts_NA.triggerRepaint()
-
-        # self.actualisation_emprise()
-
-    def activation_boutons(self):
-
-        # self.dlg.lineEdit.setEnabled(True)
-        # self.dlg.commandLinkButton_4.setEnabled(True)
-        self.dlg.commandLinkButton_5.setEnabled(True)
-        self.dlg.radioButton.setEnabled(True)
-        self.dlg.radioButton_2.setEnabled(True)
-        self.dlg.radioButton_3.setEnabled(True)
 
 
     def onTextChanged(self, filter_text):
@@ -724,8 +711,8 @@ class MapCEN:
         legend.setAutoUpdateModel(False)
 
         root = QgsLayerTree()
-        root.addLayer(self.layer).setUseLayerName(False)
-        root.addLayer(self.layer).setName("Types de maîtrise")
+        # root.addLayer(self.layer).setUseLayerName(False)
+        # root.addLayer(self.layer).setName("Types de maîtrise")
 
         legend.updateLegend()
 

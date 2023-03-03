@@ -394,7 +394,7 @@ class MapCEN:
 
         self.listes_sites_MFU.clear()
 
-        dpts_NA = ["16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
+        dpts_NA = ["Choix du département", "16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
                    "33 - Gironde", "40 - Landes", "47 - Lot", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
                    "86 - Vienne", "87 - Haute-Vienne"]
 
@@ -530,6 +530,23 @@ class MapCEN:
                     QgsProject.instance().removeMapLayers([lyr.id()])
 
 
+        if self.dlg.radioButton_4.isChecked() == True:
+
+            uri = 'url=https://wxs.ign.fr/cartes/geoportail/r/wms&service=WMS+Raster&version=1.3.0&crs=EPSG:2154&format=image/png&layers=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&styles'
+            self.fond = QgsRasterLayer(uri, "Plan IGN", "wms")
+
+            if not QgsProject.instance().mapLayersByName("Plan IGN"):
+                QgsProject.instance().addMapLayer(self.fond)
+            else:
+                print("Le fond de carte 'Plan IGN' est déjà chargé")
+
+            fond_carte = QgsProject.instance().mapLayersByName("Plan IGN")[0]
+
+        else :
+            for lyr in QgsProject.instance().mapLayers().values():
+                if lyr.name() == "Plan IGN":
+                    QgsProject.instance().removeMapLayers([lyr.id()])
+
         # Ordre des couches dans gestionnaires couches : fond de carte sous les autres couches
         root = QgsProject.instance().layerTreeRoot()
         fond_carte = root.findLayer(fond_carte.id())
@@ -538,12 +555,19 @@ class MapCEN:
         parent.insertChildNode(-1, myClone)
         parent.removeChildNode(fond_carte)
 
-        # On place la couche "Parcelles MFU" en première dans le gestionnaire des couches
+        # On place la couche "Parcelles MFU" en deuxième dans le gestionnaire des couches
         parcelles_MFU = root.findLayer(self.layer.id())
         myClone = parcelles_MFU.clone()
         parent = parcelles_MFU.parent()
-        parent.insertChildNode(0, myClone)
+        parent.insertChildNode(1, myClone)
         parent.removeChildNode(parcelles_MFU)
+
+        # On place la couche "Depts_NA" en première dans le gestionnaire des couches
+        departements_NA = root.findLayer(self.depts_NA.id())
+        myClone = departements_NA.clone()
+        parent = departements_NA.parent()
+        parent.insertChildNode(0, myClone)
+        parent.removeChildNode(departements_NA)
 
         # ### Zoom sur emprise du ou des sites CEN selectionnés:
 

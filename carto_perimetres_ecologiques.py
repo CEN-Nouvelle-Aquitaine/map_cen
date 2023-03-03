@@ -100,12 +100,60 @@ class module_perim_eco():
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
         depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
 
+        vlayer.removeSelection()
+
+        for sites in self.dlg.mComboBox.checkedItems():
+
+            vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+
+        iface.mapCanvas().zoomToSelected(vlayer)
+
+
+        rules = (
+            ('Site CEN sélectionné', "is_selected()", 'red'),
+        )
+
+        # create a new rule-based renderer
+        symbol = QgsSymbol.defaultSymbol(vlayer.geometryType())
+        renderer = QgsRuleBasedRenderer(symbol)
+
+        # get the "root" rule
+        root_rule = renderer.rootRule()
+
+        for label, expression, color_name in rules:
+            # create a clone (i.e. a copy) of the default rule
+            rule = root_rule.children()[0].clone()
+            # set the label, expression and color
+            rule.setLabel(label)
+            rule.setFilterExpression(expression)
+            symbol_layer = rule.symbol().symbolLayer(0)
+            color = symbol_layer.color()
+            generator = QgsGeometryGeneratorSymbolLayer.create({})
+            generator.setSymbolType(QgsSymbol.Marker)
+            generator.setGeometryExpression("centroid($geometry)")
+            generator.setColor(QColor('Red'))
+            rule.symbol().setColor(QColor(color_name))
+            # set the scale limits if they have been specified
+            # append the rule to the list of rules
+            rule.symbol().changeSymbolLayer(0, generator)
+            root_rule.appendChild(rule)
+
+        # delete the default rule
+        root_rule.removeChildAt(0)
+
+        # apply the renderer to the layer
+        vlayer.setRenderer(renderer)
+        # refresh the layer on the map canvas
+        vlayer.triggerRepaint()
+
         if self.dlg.radioButton.isChecked() == True:
             fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
         elif self.dlg.radioButton_2.isChecked() == True:
             fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
         elif self.dlg.radioButton_3.isChecked() == True:
             fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
+        elif self.dlg.radioButton_4.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("Plan IGN")[0]
 
         self.dlg.horizontalSlider.setValue(0)
 

@@ -80,9 +80,9 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>100</y>
+        <y>90</y>
         <width>211</width>
-        <height>121</height>
+        <height>141</height>
        </rect>
       </property>
       <property name="font">
@@ -101,9 +101,9 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>30</y>
+         <y>20</y>
          <width>171</width>
-         <height>91</height>
+         <height>111</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -137,6 +137,19 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_4">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Plan IGN</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
           </property>
          </widget>
         </item>

@@ -32,7 +32,58 @@ class module_loc_generale():
 
         layer = QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU")[0]
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
-        depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
+        self.depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
+
+        departement = self.dlg.comboBox_2.currentText()[0:2]
+
+        self.depts_NA.selectByExpression('"insee_dep"= \'%s\'' % departement, QgsVectorLayer.SetSelection)
+
+        vlayer.removeSelection()
+        layer.removeSelection()
+
+        for sites in self.dlg.mComboBox.checkedItems():
+            vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")),
+                                           QgsVectorLayer.AddToSelection)
+
+        iface.mapCanvas().zoomToSelected(vlayer)
+
+        rules = (
+            ('Site CEN sélectionné', "is_selected()", 'red'),
+        )
+
+        # create a new rule-based renderer
+        symbol = QgsSymbol.defaultSymbol(vlayer.geometryType())
+        renderer = QgsRuleBasedRenderer(symbol)
+
+        # get the "root" rule
+        root_rule = renderer.rootRule()
+
+        for label, expression, color_name in rules:
+            # create a clone (i.e. a copy) of the default rule
+            rule = root_rule.children()[0].clone()
+            # set the label, expression and color
+            rule.setLabel(label)
+            rule.setFilterExpression(expression)
+            symbol_layer = rule.symbol().symbolLayer(0)
+            color = symbol_layer.color()
+            generator = QgsGeometryGeneratorSymbolLayer.create({})
+            generator.setSymbolType(QgsSymbol.Marker)
+            generator.setGeometryExpression("centroid($geometry)")
+            generator.setColor(QColor('Red'))
+            rule.symbol().setColor(QColor(color_name))
+            # set the scale limits if they have been specified
+            # append the rule to the list of rules
+            rule.symbol().changeSymbolLayer(0, generator)
+            root_rule.appendChild(rule)
+
+        # delete the default rule
+        root_rule.removeChildAt(0)
+
+        # apply the renderer to the layer
+        vlayer.setRenderer(renderer)
+        # refresh the layer on the map canvas
+        vlayer.triggerRepaint()
+
 
         if self.dlg.radioButton.isChecked() == True:
             fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
@@ -40,6 +91,8 @@ class module_loc_generale():
             fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
         elif self.dlg.radioButton_3.isChecked() == True:
             fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
+        elif self.dlg.radioButton_4.isChecked() == True:
+            fond_carte = QgsProject.instance().mapLayersByName("Plan IGN")[0]
 
         self.dlg.horizontalSlider.setValue(0)
 
@@ -72,7 +125,7 @@ class module_loc_generale():
         self.my_map1.setRect(20, 20, 20, 20)
 
 
-        self.my_map1.setLayers([layer, fond_carte])
+        self.my_map1.setLayers([self.depts_NA, layer, fond_carte])
 
 
         # Mettre le canvas courant comme emprise
@@ -99,10 +152,11 @@ class module_loc_generale():
 
         my_map2 = QgsLayoutItemMap(self.layout)
         my_map2.setRect(20, 20, 20, 20)
-        my_map2.setPos(228, 27)
-        my_map2.setFrameEnabled(False)
+        my_map2.setPos(227, 29)
+        my_map2.setFrameEnabled(True)
 
-        my_map2.setLayers([vlayer, depts_NA])
+        my_map2.setLayers([vlayer, self.depts_NA])
+
 
         ## Ajustement de l'emprise de la couche depts_CEN-NA au CRS 2154 :
 
@@ -114,11 +168,10 @@ class module_loc_generale():
         xform = QgsCoordinateTransform(crsSrc, crsDest, transformContext)
 
         # forward transformation: src -> dest
-        extent = xform.transform(depts_NA.extent())
-
+        extent = xform.transform(self.depts_NA.selectedFeatures()[0].geometry().boundingBox())
 
         my_map2.setExtent(extent)
-        my_map2.setScale(30000000)
+        my_map2.setScale(my_map2.scale() * 1.5)
 
         my_map2.attemptResize(QgsLayoutSize(65, 65, QgsUnitTypes.LayoutMillimeters))
 
@@ -253,36 +306,45 @@ class module_loc_generale():
 
         self.dlg.graphicsView.setScene(self.layout_carto_generale)
 
-    #     self.highlight_features()
-    #
-    #
-    # # function that does the work of highlighting selected features
-    # def highlight_features(self):
-    #
-    #     # récupérer la couche active dans QGIS
-    #     layer = iface.activeLayer()
-    #
-    #     # créer une expression de filtre basée sur les IDs des entités sélectionnées
-    #     expression = "insee_dep IN ('{}')".format("','".join(self.dlg.comboBox_2.currentText()[0:2]))
-    #
-    #     # récupérer le symbole de remplissage de la couche
-    #     symbol = layer.renderer().symbol().clone()
-    #
-    #     # définir l'opacité du symbole de remplissage des entités sélectionnées à 0 (entièrement transparent)
-    #     symbol.symbolLayer(0).setOpacity(0)
-    #
-    #     # créer une règle de rendu pour les entités sélectionnées
-    #     rule_selected = QgsRuleBasedRenderer.Rule(symbol, filterExpression=expression)
-    #
-    #     # créer une règle de rendu par défaut pour toutes les autres entités
-    #     rule_default = QgsRuleBasedRenderer.Rule(layer.renderer().symbol().clone())
-    #
-    #     # créer un objet de rendu basé sur les règles de rendu créées
-    #     renderer = QgsRuleBasedRenderer(rule_default)
-    #     renderer.addChildRule(rule_selected)
-    #
-    #     # mettre à jour le rendu de la couche avec le rendu modifié
-    #     layer.setRenderer(renderer)
-    #
-    #     # forcer le rafraîchissement de l'affichage de la couche dans QGIS
-    #     layer.triggerRepaint()
+
+        self.highlight_features()
+
+
+    # function that does the work of highlighting selected features
+    def highlight_features(self):
+
+        # define some rules: label, expression, color name, (min scale, max scale)
+        rules = (
+            ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#e7eaee'),
+        # create a new rule-based renderer
+        )
+
+        # create a new rule-based renderer
+        symbol = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())
+        renderer = QgsRuleBasedRenderer(symbol)
+
+        # get the "root" rule
+        root_rule = renderer.rootRule()
+
+        for label, expression, color_name in rules:
+            # create a clone (i.e. a copy) of the default rule
+            rule = root_rule.children()[0].clone()
+            # set the label, expression and color
+            rule.setLabel(label)
+            rule.setFilterExpression(expression)
+            rule.symbol().setColor(QColor(color_name))
+            # set the scale limits if they have been specified
+            # append the rule to the list of rules
+            root_rule.appendChild(rule)
+
+        # delete the default rule
+        root_rule.removeChildAt(0)
+
+        # apply the renderer to the layer
+        self.depts_NA.setRenderer(renderer)
+        # refresh the layer on the map canvas
+
+        self.depts_NA.setOpacity(0.8)
+
+        self.depts_NA.triggerRepaint()
+

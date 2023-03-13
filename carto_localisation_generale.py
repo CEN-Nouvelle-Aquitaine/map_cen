@@ -313,38 +313,26 @@ class module_loc_generale():
     # function that does the work of highlighting selected features
     def highlight_features(self):
 
-        # define some rules: label, expression, color name, (min scale, max scale)
         rules = (
-            ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#e7eaee'),
-        # create a new rule-based renderer
+            ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#e7eaee', 0.8),
+            ('Département sélectionné', '"insee_dep" IS \'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#fff', 0),
         )
 
-        # create a new rule-based renderer
         symbol = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())
         renderer = QgsRuleBasedRenderer(symbol)
-
-        # get the "root" rule
         root_rule = renderer.rootRule()
 
-        for label, expression, color_name in rules:
-            # create a clone (i.e. a copy) of the default rule
+        for label, expression, color_name, opacity in rules:
             rule = root_rule.children()[0].clone()
-            # set the label, expression and color
             rule.setLabel(label)
             rule.setFilterExpression(expression)
             rule.symbol().setColor(QColor(color_name))
-            # set the scale limits if they have been specified
-            # append the rule to the list of rules
+            rule.symbol().setOpacity(opacity)
+            rule.symbol().symbolLayer(0).setStrokeColor(QColor("black"))
+            
             root_rule.appendChild(rule)
 
-        # delete the default rule
         root_rule.removeChildAt(0)
 
-        # apply the renderer to the layer
         self.depts_NA.setRenderer(renderer)
-        # refresh the layer on the map canvas
-
-        self.depts_NA.setOpacity(0.8)
-
         self.depts_NA.triggerRepaint()
-

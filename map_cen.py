@@ -392,13 +392,17 @@ class MapCEN:
         # self.dlg.mComboBox.setLineEdit(self.dlg.lineEdit)
         self.dlg.mComboBox.addItems(self.listes_sites_MFU)
 
+        #On clear les combobox ici car à chaque fois que la comboBox_3 est sélectionné cela lance la fonction "intialisation" du script principal "map_cen.py" et les lignes suivantes sont donc ré-éxécutées (duplicats de départements et de site à chaque fois)
         self.listes_sites_MFU.clear()
+        self.dlg.comboBox_2.clear()
 
         dpts_NA = ["Choix du département", "16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
                    "33 - Gironde", "40 - Landes", "47 - Lot", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
                    "86 - Vienne", "87 - Haute-Vienne"]
 
         self.dlg.comboBox_2.addItems(dpts_NA)
+
+        self.dlg.commandLinkButton_4.setEnabled(False)
 
 
     def ajout_couches(self):
@@ -437,10 +441,6 @@ class MapCEN:
         if not self.depts_NA:
             QMessageBox.question(iface.mainWindow(), u"Erreur !", "Impossible de charge la couche 'Département', veuillez contacter le pôle DSI !", QMessageBox.Ok)
 
-        single_symbol_renderer = self.depts_NA.renderer()
-
-        symbol = single_symbol_renderer.symbol()
-        symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
 
         if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
 
@@ -449,8 +449,10 @@ class MapCEN:
         else:
             print("test")
 
-        self.depts_NA.triggerRepaint()
+        single_symbol_renderer = self.depts_NA.renderer()
 
+        symbol = single_symbol_renderer.symbol()
+        symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
 
     def onTextChanged(self, filter_text):
 
@@ -468,168 +470,173 @@ class MapCEN:
 
     def actualisation_emprise(self):
 
-        self.vlayer.removeSelection()
-        self.layer.removeSelection()
-
-        # if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
-        #     QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
-
-        ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
-
-        if self.dlg.radioButton.isChecked() == True:
-            uri = "url=https://wxs.ign.fr/ortho/geoportail/r/wms&service=WMS+Raster&version=1.3.0&crs=EPSG:2154&format=image/png&layers=HR.ORTHOIMAGERY.ORTHOPHOTOS&styles"
-            # tms = 'type=xyz&zmin=0&zmax=20&url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D{x}%26y%3D{y}%26z%3D{z}'
-            self.fond = QgsRasterLayer(uri, "Fond ortho IGN 2021", 'wms')
-
-            if not QgsProject.instance().mapLayersByName("Fond ortho IGN 2021"):
-                QgsProject.instance().addMapLayer(self.fond)
-            else:
-                print("Le fond de carte 'Fond ortho IGN 2021' est déjà chargé")
-
-            fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
+        if len(self.dlg.mComboBox.checkedItems()) < 1:
+            QMessageBox.question(iface.mainWindow(), u"Attention !", "Veuillez sélectionner au moins un site CEN !", QMessageBox.Ok)
 
         else :
-            for lyr in QgsProject.instance().mapLayers().values():
-                if lyr.name() == "Fond ortho IGN 2021":
-                    QgsProject.instance().removeMapLayers([lyr.id()])
+                
+            self.vlayer.removeSelection()
+            self.layer.removeSelection()
+
+            # if self.dlg.lineEdit.text() not in self.listes_sites_MFU:
+            #     QMessageBox.question(iface.mainWindow(), u"Nom de site invalide", "Renseigner un nom de site CEN-NA valide !", QMessageBox.Ok)
+
+            ### -------------------- Choix et ajout des fonds de carte ---------------------- ###
+
+            if self.dlg.radioButton.isChecked() == True:
+                uri = "url=https://wxs.ign.fr/ortho/geoportail/r/wms&service=WMS+Raster&version=1.3.0&crs=EPSG:2154&format=image/png&layers=HR.ORTHOIMAGERY.ORTHOPHOTOS&styles"
+                # tms = 'type=xyz&zmin=0&zmax=20&url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D{x}%26y%3D{y}%26z%3D{z}'
+                self.fond = QgsRasterLayer(uri, "Fond ortho IGN 2021", 'wms')
+
+                if not QgsProject.instance().mapLayersByName("Fond ortho IGN 2021"):
+                    QgsProject.instance().addMapLayer(self.fond)
+                else:
+                    print("Le fond de carte 'Fond ortho IGN 2021' est déjà chargé")
+
+                fond_carte = QgsProject.instance().mapLayersByName("Fond ortho IGN 2021")[0]
+
+            else :
+                for lyr in QgsProject.instance().mapLayers().values():
+                    if lyr.name() == "Fond ortho IGN 2021":
+                        QgsProject.instance().removeMapLayers([lyr.id()])
 
 
-        if self.dlg.radioButton_2.isChecked() == True:
+            if self.dlg.radioButton_2.isChecked() == True:
 
-            tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png&zmax=19&zmin=0'
-            self.fond = QgsRasterLayer(tms, 'OSM', 'wms')
+                tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png&zmax=19&zmin=0'
+                self.fond = QgsRasterLayer(tms, 'OSM', 'wms')
 
-            if not QgsProject.instance().mapLayersByName("OSM"):
-                QgsProject.instance().addMapLayer(self.fond)
+                if not QgsProject.instance().mapLayersByName("OSM"):
+                    QgsProject.instance().addMapLayer(self.fond)
+                else:
+                    print("Le fond de carte OSM est déjà chargé")
+
+                fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
+
+            else :
+                for lyr in QgsProject.instance().mapLayers().values():
+                    if lyr.name() == "OSM":
+                        QgsProject.instance().removeMapLayers([lyr.id()])
+
+
+            if self.dlg.radioButton_3.isChecked() == True:
+
+                uri = 'url=https://opendata.cen-nouvelle-aquitaine.org/geoserver/fond_carto/wms?service=WMS+Raster&version=1.0.0&crs=EPSG:2154&format=image/png&layers=SCAN25TOUR_PYR-JPEG_WLD_WM&styles'
+                self.fond = QgsRasterLayer(uri, "SCAN25 IGN", "wms")
+
+                if not QgsProject.instance().mapLayersByName("SCAN25 IGN"):
+                    QgsProject.instance().addMapLayer(self.fond)
+                else:
+                    print("Le fond de carte SCAN25 IGN est déjà chargé")
+
+                fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
+
+            else :
+                for lyr in QgsProject.instance().mapLayers().values():
+                    if lyr.name() == "SCAN25 IGN":
+                        QgsProject.instance().removeMapLayers([lyr.id()])
+
+
+            if self.dlg.radioButton_4.isChecked() == True:
+
+                uri = 'url=https://wxs.ign.fr/cartes/geoportail/r/wms&service=WMS+Raster&version=1.3.0&crs=EPSG:2154&format=image/png&layers=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&styles'
+                self.fond = QgsRasterLayer(uri, "Plan IGN", "wms")
+
+                if not QgsProject.instance().mapLayersByName("Plan IGN"):
+                    QgsProject.instance().addMapLayer(self.fond)
+                else:
+                    print("Le fond de carte 'Plan IGN' est déjà chargé")
+
+                fond_carte = QgsProject.instance().mapLayersByName("Plan IGN")[0]
+
+            else :
+                for lyr in QgsProject.instance().mapLayers().values():
+                    if lyr.name() == "Plan IGN":
+                        QgsProject.instance().removeMapLayers([lyr.id()])
+
+            # Ordre des couches dans gestionnaires couches : fond de carte sous les autres couches
+            root = QgsProject.instance().layerTreeRoot()
+            fond_carte = root.findLayer(fond_carte.id())
+            myClone = fond_carte.clone()
+            parent = fond_carte.parent()
+            parent.insertChildNode(-1, myClone)
+            parent.removeChildNode(fond_carte)
+
+            # On place la couche "Parcelles MFU" en deuxième dans le gestionnaire des couches
+            parcelles_MFU = root.findLayer(self.layer.id())
+            myClone = parcelles_MFU.clone()
+            parent = parcelles_MFU.parent()
+            parent.insertChildNode(1, myClone)
+            parent.removeChildNode(parcelles_MFU)
+
+            # On place la couche "Depts_NA" en première dans le gestionnaire des couches
+            departements_NA = root.findLayer(self.depts_NA.id())
+            myClone = departements_NA.clone()
+            parent = departements_NA.parent()
+            parent.insertChildNode(0, myClone)
+            parent.removeChildNode(departements_NA)
+
+            # ### Zoom sur emprise du ou des sites CEN selectionnés:
+
+            for sites in self.dlg.mComboBox.checkedItems():
+
+                self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+
+            iface.mapCanvas().zoomToSelected(self.vlayer)
+
+            QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
+
+
+            rules = (
+                ('Site CEN sélectionné', "is_selected()", 'red'),
+            )
+
+            # create a new rule-based renderer
+            symbol = QgsSymbol.defaultSymbol(self.vlayer.geometryType())
+            renderer = QgsRuleBasedRenderer(symbol)
+
+            # get the "root" rule
+            root_rule = renderer.rootRule()
+
+            for label, expression, color_name in rules:
+                # create a clone (i.e. a copy) of the default rule
+                rule = root_rule.children()[0].clone()
+                # set the label, expression and color
+                rule.setLabel(label)
+                rule.setFilterExpression(expression)
+                symbol_layer = rule.symbol().symbolLayer(0)
+                color = symbol_layer.color()
+                generator = QgsGeometryGeneratorSymbolLayer.create({})
+                generator.setSymbolType(QgsSymbol.Marker)
+                generator.setGeometryExpression("centroid($geometry)")
+                generator.setColor(QColor('Red'))
+                rule.symbol().setColor(QColor(color_name))
+                # set the scale limits if they have been specified
+                # append the rule to the list of rules
+                rule.symbol().changeSymbolLayer(0, generator)
+                root_rule.appendChild(rule)
+
+            # delete the default rule
+            root_rule.removeChildAt(0)
+
+            # apply the renderer to the layer
+            self.vlayer.setRenderer(renderer)
+            # refresh the layer on the map canvas
+            self.vlayer.triggerRepaint()
+
+            sites_selectionnes = (','.join("'" + item.replace("'", "''") + "'" for item in self.dlg.mComboBox.checkedItems()))
+
+            if len(self.dlg.mComboBox.checkedItems()) < 2:
+                expr = "\"nom_site\" IS {0}".format(sites_selectionnes)
             else:
-                print("Le fond de carte OSM est déjà chargé")
+                expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
 
-            fond_carte = QgsProject.instance().mapLayersByName("OSM")[0]
-
-        else :
-            for lyr in QgsProject.instance().mapLayers().values():
-                if lyr.name() == "OSM":
-                    QgsProject.instance().removeMapLayers([lyr.id()])
-
-
-        if self.dlg.radioButton_3.isChecked() == True:
-
-            uri = 'url=https://opendata.cen-nouvelle-aquitaine.org/geoserver/fond_carto/wms?service=WMS+Raster&version=1.0.0&crs=EPSG:2154&format=image/png&layers=SCAN25TOUR_PYR-JPEG_WLD_WM&styles'
-            self.fond = QgsRasterLayer(uri, "SCAN25 IGN", "wms")
-
-            if not QgsProject.instance().mapLayersByName("SCAN25 IGN"):
-                QgsProject.instance().addMapLayer(self.fond)
+            if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
+                self.module_perim_eco.mise_en_page()
+            elif self.dlg.comboBox_3.currentText() == "Localisation de sites":
+                self.module_loc_generale.mise_en_page()
             else:
-                print("Le fond de carte SCAN25 IGN est déjà chargé")
-
-            fond_carte = QgsProject.instance().mapLayersByName("SCAN25 IGN")[0]
-
-        else :
-            for lyr in QgsProject.instance().mapLayers().values():
-                if lyr.name() == "SCAN25 IGN":
-                    QgsProject.instance().removeMapLayers([lyr.id()])
-
-
-        if self.dlg.radioButton_4.isChecked() == True:
-
-            uri = 'url=https://wxs.ign.fr/cartes/geoportail/r/wms&service=WMS+Raster&version=1.3.0&crs=EPSG:2154&format=image/png&layers=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&styles'
-            self.fond = QgsRasterLayer(uri, "Plan IGN", "wms")
-
-            if not QgsProject.instance().mapLayersByName("Plan IGN"):
-                QgsProject.instance().addMapLayer(self.fond)
-            else:
-                print("Le fond de carte 'Plan IGN' est déjà chargé")
-
-            fond_carte = QgsProject.instance().mapLayersByName("Plan IGN")[0]
-
-        else :
-            for lyr in QgsProject.instance().mapLayers().values():
-                if lyr.name() == "Plan IGN":
-                    QgsProject.instance().removeMapLayers([lyr.id()])
-
-        # Ordre des couches dans gestionnaires couches : fond de carte sous les autres couches
-        root = QgsProject.instance().layerTreeRoot()
-        fond_carte = root.findLayer(fond_carte.id())
-        myClone = fond_carte.clone()
-        parent = fond_carte.parent()
-        parent.insertChildNode(-1, myClone)
-        parent.removeChildNode(fond_carte)
-
-        # On place la couche "Parcelles MFU" en deuxième dans le gestionnaire des couches
-        parcelles_MFU = root.findLayer(self.layer.id())
-        myClone = parcelles_MFU.clone()
-        parent = parcelles_MFU.parent()
-        parent.insertChildNode(1, myClone)
-        parent.removeChildNode(parcelles_MFU)
-
-        # On place la couche "Depts_NA" en première dans le gestionnaire des couches
-        departements_NA = root.findLayer(self.depts_NA.id())
-        myClone = departements_NA.clone()
-        parent = departements_NA.parent()
-        parent.insertChildNode(0, myClone)
-        parent.removeChildNode(departements_NA)
-
-        # ### Zoom sur emprise du ou des sites CEN selectionnés:
-
-        for sites in self.dlg.mComboBox.checkedItems():
-
-            self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
-
-        iface.mapCanvas().zoomToSelected(self.vlayer)
-
-        QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(2154))
-
-
-        rules = (
-            ('Site CEN sélectionné', "is_selected()", 'red'),
-        )
-
-        # create a new rule-based renderer
-        symbol = QgsSymbol.defaultSymbol(self.vlayer.geometryType())
-        renderer = QgsRuleBasedRenderer(symbol)
-
-        # get the "root" rule
-        root_rule = renderer.rootRule()
-
-        for label, expression, color_name in rules:
-            # create a clone (i.e. a copy) of the default rule
-            rule = root_rule.children()[0].clone()
-            # set the label, expression and color
-            rule.setLabel(label)
-            rule.setFilterExpression(expression)
-            symbol_layer = rule.symbol().symbolLayer(0)
-            color = symbol_layer.color()
-            generator = QgsGeometryGeneratorSymbolLayer.create({})
-            generator.setSymbolType(QgsSymbol.Marker)
-            generator.setGeometryExpression("centroid($geometry)")
-            generator.setColor(QColor('Red'))
-            rule.symbol().setColor(QColor(color_name))
-            # set the scale limits if they have been specified
-            # append the rule to the list of rules
-            rule.symbol().changeSymbolLayer(0, generator)
-            root_rule.appendChild(rule)
-
-        # delete the default rule
-        root_rule.removeChildAt(0)
-
-        # apply the renderer to the layer
-        self.vlayer.setRenderer(renderer)
-        # refresh the layer on the map canvas
-        self.vlayer.triggerRepaint()
-
-        sites_selectionnes = (','.join("'" + item.replace("'", "''") + "'" for item in self.dlg.mComboBox.checkedItems()))
-
-        if len(self.dlg.mComboBox.checkedItems()) < 2:
-            expr = "\"nom_site\" IS {0}".format(sites_selectionnes)
-        else:
-            expr = "\"nom_site\" IN ({0})".format(sites_selectionnes)
-
-        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
-            self.module_perim_eco.mise_en_page()
-        elif self.dlg.comboBox_3.currentText() == "Localisation de sites":
-            self.module_loc_generale.mise_en_page()
-        else:
-            self.mise_en_page()
+                self.mise_en_page()
 
 
     def mise_en_page(self):

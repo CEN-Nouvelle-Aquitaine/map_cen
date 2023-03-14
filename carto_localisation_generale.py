@@ -313,26 +313,34 @@ class module_loc_generale():
     # function that does the work of highlighting selected features
     def highlight_features(self):
 
-        rules = (
-            ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#e7eaee', 0.8),
-            ('Département sélectionné', '"insee_dep" IS \'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#fff', 0),
-        )
+        # rules = (
+        #     ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#e7eaee', 0.8),
+        #     ('Département sélectionné', '"insee_dep" IS \'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#fff', 0),
+        # )
 
-        symbol = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())
-        renderer = QgsRuleBasedRenderer(symbol)
-        root_rule = renderer.rootRule()
+        # symbol = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())
+        # renderer = QgsRuleBasedRenderer(symbol)
+        # root_rule = renderer.rootRule()
 
-        for label, expression, color_name, opacity in rules:
-            rule = root_rule.children()[0].clone()
-            rule.setLabel(label)
-            rule.setFilterExpression(expression)
-            rule.symbol().setColor(QColor(color_name))
-            rule.symbol().setOpacity(opacity)
-            rule.symbol().symbolLayer(0).setStrokeColor(QColor("black"))
+        # for label, expression, color_name, opacity in rules:
+        #     rule = root_rule.children()[0].clone()
+        #     rule.setLabel(label)
+        #     rule.setFilterExpression(expression)
+        #     rule.symbol().setColor(QColor(color_name))
+        #     rule.symbol().setOpacity(opacity)
+        #     rule.symbol().symbolLayer(0).setStrokeColor(QColor("black"))
             
-            root_rule.appendChild(rule)
+        #     root_rule.appendChild(rule)
 
-        root_rule.removeChildAt(0)
+        # root_rule.removeChildAt(0)
 
-        self.depts_NA.setRenderer(renderer)
-        self.depts_NA.triggerRepaint()
+        # self.depts_NA.setRenderer(renderer)
+        # self.depts_NA.triggerRepaint()
+
+
+        single_symbol_renderer = self.depts_NA.renderer()
+
+        symbol = single_symbol_renderer.symbol()
+        symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
+
+        self.depts_NA.removeSelection()

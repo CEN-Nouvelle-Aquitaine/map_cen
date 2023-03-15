@@ -343,9 +343,19 @@ class MapCEN:
 
     def initialisation(self):
 
-        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques" :
+        self.dlg.radioButton.setChecked(True)
+        self.dlg.radioButton.setEnabled(True)
+        self.dlg.radioButton_2.setEnabled(True)
+        self.dlg.radioButton_3.setEnabled(True)
 
-            self.module_perim_eco.initialisation2()
+
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques" :
+            
+            self.module_perim_eco.initialisation()
+
+        elif self.dlg.comboBox_3.currentText() == "Localisation de sites" :
+            
+            self.module_loc_generale.initialisation()
 
         else:
 

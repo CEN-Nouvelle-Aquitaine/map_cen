@@ -27,7 +27,7 @@ class module_perim_eco():
         self.layout_carto_perim_eco = None
 
 
-    def initialisation2(self):
+    def initialisation(self):
 
         #On lit le fichier csv contenant les flux CEN sous forme de dictionnaire et on en extrait tous les noms techniques correspondant à la catégorie "Périmètres écologiques":
         url_open = urllib.request.urlopen("https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")

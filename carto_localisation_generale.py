@@ -28,6 +28,15 @@ class module_loc_generale():
         self.layout_carto_generale = None
 
 
+    def initialisation(self):
+
+        self.dlg.radioButton_4.setChecked(True)
+
+        self.dlg.radioButton.setEnabled(False)
+        self.dlg.radioButton_2.setEnabled(False)
+        self.dlg.radioButton_3.setEnabled(False)
+
+
     def mise_en_page(self):
 
         layer = QgsProject.instance().mapLayersByName("Parcelles CEN NA en MFU")[0]

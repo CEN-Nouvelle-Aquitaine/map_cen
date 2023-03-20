@@ -36,6 +36,16 @@ class module_loc_generale():
         self.dlg.radioButton_2.setEnabled(False)
         self.dlg.radioButton_3.setEnabled(False)
 
+        #On fait disparaitre la comboBox lorsque le choix "périmetre eco" n'est plus sélectionné (idem pour le label_15) :
+        if self.dlg.mComboBox_3.isVisible():
+            self.dlg.mComboBox_3.hide()
+
+        self.dlg.mComboBox_3.clear()
+
+        self.dlg.label_15.setText("")
+        self.dlg.label_15.hide()
+
+
 
     def mise_en_page(self):
 

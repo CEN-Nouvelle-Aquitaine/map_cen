@@ -363,9 +363,9 @@ class MapCEN:
             print("non")
             print(self.vlayer.selectedFeatures()[0])
 
-        print(self.dlg.mComboBox.checkedItems())
-        print(self.vlayer.selectedFeatures()[0])
-        print(self.vlayer.selectedFeatures()[0]["codesite"][:2])
+        # print(self.dlg.mComboBox.checkedItems())
+        # print(self.vlayer.selectedFeatures()[0])
+        # print(self.vlayer.selectedFeatures()[0]["codesite"][:2])
 
         self.dlg.mComboBox.clear()
 
@@ -833,7 +833,17 @@ class MapCEN:
         ## Ajout d'un titre à la mise en page
         title = QgsLayoutItemLabel(self.layout)
         self.layout.addLayoutItem(title)
-        titre = str(', '.join(self.dlg.mComboBox.checkedItems()) + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
+
+        #lorsque sites de plusieurs départements sélectionnés, on les stockes dans une liste pour afficher les n° départements dans le titre:
+        code_dpt = []
+        for i in self.vlayer.selectedFeatures():
+            code_dpt.append(i["codesite"][:2])
+
+        if len(self.dlg.mComboBox_4.checkedItems()) > 1:
+            titre = str(', '.join(self.dlg.mComboBox.checkedItems()) + " " + str(tuple([int(x) for x in code_dpt])) )
+        else:
+            titre = str(', '.join(self.dlg.mComboBox.checkedItems()) + " (" + self.vlayer.selectedFeatures()[0]["codesite"][:2] + ")")
+
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.attemptMove(QgsLayoutPoint(4.2, 5.8, QgsUnitTypes.LayoutMillimeters))
@@ -913,7 +923,10 @@ class MapCEN:
 
 
         for sites in self.dlg.mComboBox.checkedItems():
-            self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+            if self.dlg.checkBox.isChecked():
+                self.vlayer.selectByExpression('"codesite"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+            else :
+                self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
 
         temp_layer = self.vlayer.materialize(QgsFeatureRequest().setFilterFids(self.vlayer.selectedFeatureIds()))
 

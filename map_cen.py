@@ -163,7 +163,7 @@ class MapCEN:
         self.dlg.graphicsView.setMouseTracking(True)
 
         self.dlg.horizontalSlider.valueChanged.connect(self.niveau_zoom)
-        self.dlg.comboBox_2.currentIndexChanged.connect(self.choix_dept)
+        self.dlg.mComboBox_4.checkedItemsChanged.connect(self.choix_dept)
 
         self.dlg.comboBox.currentIndexChanged.connect(self.liste_couche_template)
 
@@ -174,8 +174,10 @@ class MapCEN:
         self.dlg.comboBox_3.model().item(0).setEnabled(False)
         # self.dlg.lineEdit.textChanged.connect(self.onTextChanged)
 
+        self.dlg.checkBox.stateChanged.connect(self.ajout_code_sites)
+
         self.dlg.setMouseTracking(True)
-        # self.dlg.comboBox_2.setEnabled(False)
+        # self.dlg.mComboBox_4.setEnabled(False)
 
         self.movie = QMovie(
             str(self.plugin_path) + "/underconstruction.gif")  # récupération du gif via le chemin relatif du plugin
@@ -324,22 +326,52 @@ class MapCEN:
 
         self.listes_sites_MFU_filtered = []
 
-        departement = self.dlg.comboBox_2.currentText()[0:2]
+        departement = self.dlg.mComboBox_4.checkedItems()
 
-        if not self.dlg.comboBox_2.currentIndex == -1:
-            for p in self.vlayer.getFeatures(
-                    QgsFeatureRequest().setFilterExpression('substr("codesite",1,2) = \'%s\'' % departement)):
-                self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+        departements_selection = []
+
+        for item in departement:
+            departements_selection.append(item[0:2])
+
+        expression_filtre = None  # initialize with a default value
+
+        if len(self.dlg.mComboBox_4.checkedItems()) == 1:
+            expression_filtre = 'substr("codesite",1,2) = %s' % str(departements_selection[0])
+        if len(self.dlg.mComboBox_4.checkedItems()) >= 2 :
+            expression_filtre = 'substr("codesite",1,2) IN %s' % str(tuple(departements_selection))
+        if len(self.dlg.mComboBox_4.checkedItems()) > 3 :
+            QMessageBox.question(iface.mainWindow(), u"Attention !",
+                                 "Aucun site ne peut être à cheval sur plus de 3 départements, veuillez limiter la sélection à 3 sites !",
+                                 QMessageBox.Ok)
+
+
+        if self.dlg.mComboBox_4.currentIndex != -1:
+            for p in self.vlayer.getFeatures(QgsFeatureRequest().setFilterExpression(expression_filtre)):
+                if self.dlg.checkBox.isChecked():
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
+                else:
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+            print("yes")
+            print(self.vlayer.selectedFeatures())
+
         else:
             for p in self.vlayer.getFeatures():
-                self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+                if self.dlg.checkBox.isChecked():
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
+                else:
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+            print("non")
+            print(self.vlayer.selectedFeatures()[0])
+
+        print(self.dlg.mComboBox.checkedItems())
+        print(self.vlayer.selectedFeatures()[0])
+        print(self.vlayer.selectedFeatures()[0]["codesite"][:2])
 
         self.dlg.mComboBox.clear()
 
         self.listes_sites_MFU_filtered.sort()
 
         self.dlg.mComboBox.addItems(self.listes_sites_MFU_filtered)
-
 
     def initialisation(self):
 
@@ -404,16 +436,33 @@ class MapCEN:
 
         #On clear les combobox ici car à chaque fois que la comboBox_3 est sélectionné cela lance la fonction "intialisation" du script principal "map_cen.py" et les lignes suivantes sont donc ré-éxécutées (duplicats de départements et de site à chaque fois)
         self.listes_sites_MFU.clear()
-        self.dlg.comboBox_2.clear()
+        self.dlg.mComboBox_4.clear()
 
-        dpts_NA = ["Choix du département", "16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
+        dpts_NA = ["16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
                    "33 - Gironde", "40 - Landes", "47 - Lot", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
                    "86 - Vienne", "87 - Haute-Vienne"]
 
-        self.dlg.comboBox_2.addItems(dpts_NA)
+        self.dlg.mComboBox_4.addItems(dpts_NA)
 
         self.dlg.commandLinkButton_4.setEnabled(False)
 
+
+    def ajout_code_sites(self):
+
+        # self.listes_sites_MFU.clear()
+        # self.dlg.mComboBox.clear()
+
+        if self.dlg.checkBox.isChecked():
+            for p in self.vlayer.getFeatures():
+                self.listes_sites_MFU.append(str(p.attributes()[1]))
+
+        else:
+            for p in self.vlayer.getFeatures():
+                self.listes_sites_MFU.append(str(p.attributes()[2]))
+
+        self.dlg.mComboBox.addItems(self.listes_sites_MFU)
+
+        self.choix_dept()
 
     def ajout_couches(self):
 
@@ -457,7 +506,7 @@ class MapCEN:
             self.module_perim_eco.chargement_perim_eco()
 
         else:
-            print("test")
+            return None
 
         single_symbol_renderer = self.depts_NA.renderer()
 

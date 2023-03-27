@@ -439,7 +439,7 @@ class MapCEN:
         self.dlg.mComboBox_4.clear()
 
         dpts_NA = ["16 - Charente", "17 - Charente-Maritime", "19 - Corrèze", "23 - Creuse", "24 - Dordogne",
-                   "33 - Gironde", "40 - Landes", "47 - Lot", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
+                   "33 - Gironde", "40 - Landes", "47 - Lot-et-Garonne", "64 - Pyrénées-Atlantique", "79 - Deux-Sèvres",
                    "86 - Vienne", "87 - Haute-Vienne"]
 
         self.dlg.mComboBox_4.addItems(dpts_NA)

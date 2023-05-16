@@ -6,7 +6,7 @@
 name=MapCEN
 qgisMinimumVersion=3.0
 description=Mise en page automatique (ajout de la légende, d'une barre d'échelle, de la flèche du nord, d'un titre) d'un projet QGIS.
-version=2.6
+version=2.8
 author=Romain Montillet
 email=r.montillet@cen-na.org
 

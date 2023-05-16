@@ -200,6 +200,9 @@ class MapCEN:
             self.dlg.comboBox.addItem(nom_fichier)
 
 
+        self.dlg.radioButton_6.setChecked(True)
+        self.dlg.radioButton_7.setChecked(True)
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -348,18 +351,18 @@ class MapCEN:
         if self.dlg.mComboBox_4.currentIndex != -1:
             for p in self.vlayer.getFeatures(QgsFeatureRequest().setFilterExpression(expression_filtre)):
                 if self.dlg.checkBox.isChecked():
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[0]))
                 else:
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
             print("yes")
             print(self.vlayer.selectedFeatures())
 
         else:
             for p in self.vlayer.getFeatures():
                 if self.dlg.checkBox.isChecked():
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[0]))
                 else:
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[2]))
+                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
             print("non")
             print(self.vlayer.selectedFeatures()[0])
 
@@ -424,7 +427,7 @@ class MapCEN:
         self.listes_sites_MFU = []
 
         for p in self.vlayer.getFeatures():
-            self.listes_sites_MFU.append(str(p.attributes()[2]))
+            self.listes_sites_MFU.append(str(p.attributes()[1]))
 
         # completer = QCompleter(self.listes_sites_MFU)
         # completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -454,11 +457,11 @@ class MapCEN:
 
         if self.dlg.checkBox.isChecked():
             for p in self.vlayer.getFeatures():
-                self.listes_sites_MFU.append(str(p.attributes()[1]))
+                self.listes_sites_MFU.append(str(p.attributes()[0]))  #ne pas chopper la colonne par index mais par son nom (plus propre) à faire !!!!!!!!!!!!!!!!!
 
         else:
             for p in self.vlayer.getFeatures():
-                self.listes_sites_MFU.append(str(p.attributes()[2]))
+                self.listes_sites_MFU.append(str(p.attributes()[1]))
 
         self.dlg.mComboBox.addItems(self.listes_sites_MFU)
 
@@ -638,8 +641,10 @@ class MapCEN:
             # ### Zoom sur emprise du ou des sites CEN selectionnés:
 
             for sites in self.dlg.mComboBox.checkedItems():
-
-                self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+                if self.dlg.checkBox.isChecked():
+                    self.vlayer.selectByExpression('"codesite"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
+                else:
+                    self.vlayer.selectByExpression('"nom_site"= \'{0}\''.format(sites.replace("'", "''")), QgsVectorLayer.AddToSelection)
 
             iface.mapCanvas().zoomToSelected(self.vlayer)
 
@@ -1019,8 +1024,8 @@ class MapCEN:
 
         if self.dlg.comboBox.currentText() == " ":
             QMessageBox.question(iface.mainWindow(), u"Aucun template sélectionné !", "Veuillez sélectionner un modèle !", QMessageBox.Ok)
-        else:
 
+        else:
 
             for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
                 with open(os.path.join(os.getcwd(), filename), 'r') as f:
@@ -1237,128 +1242,6 @@ class MapCEN:
                         # credit_text.attemptResize(QgsLayoutSize(95, 5, QgsUnitTypes.LayoutMillimeters))
 
 
-                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A3_paysage_simple.qpt":
-                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
-                        map_item.setExtent(iface.mapCanvas().extent())
-                        map_item.attemptMove(QgsLayoutPoint(7.5, 33, QgsUnitTypes.LayoutMillimeters))
-                        map_item.attemptResize(QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters))
-
-                        ## Ajout d'un titre à la mise en page
-                        title = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(title)
-                        titre = self.dlg.lineEdit_2.text()
-                        title.setText(titre)
-                        title.setFont(QFont("Calibri", 20))
-                        title.attemptMove(QgsLayoutPoint(182, 5, QgsUnitTypes.LayoutMillimeters))
-                        layout.addItem(title)
-                        title.adjustSizeToText()
-                        title.setHAlign(Qt.AlignCenter)
-                        title.setVAlign(Qt.AlignVCenter)
-                        title.setHAlign(160)
-
-                        ## Ajout d'un sous titre à la mise en page
-                        subtitle = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(subtitle)
-                        titre = self.dlg.lineEdit_3.text()
-                        subtitle.setText(titre)
-                        subtitle.setFont(QFont("Calibri", 16))
-                        subtitle.attemptMove(QgsLayoutPoint(182, 18, QgsUnitTypes.LayoutMillimeters))
-                        subtitle.adjustSizeToText()
-                        layout.addItem(subtitle)
-
-                        ## Ajout de l'échelle à la mise en page
-                        self.scalebar_qpt = [i for i in layout.items() if isinstance(i, QgsLayoutItemScaleBar)][0]
-                        self.scalebar_qpt.setStyle('Single Box')
-
-                        self.scalebar_qpt.applyDefaultSize()
-                        self.scalebar_qpt.applyDefaultSettings()
-
-                        self.scalebar_qpt.setNumberOfSegments(2)
-                        self.scalebar_qpt.setNumberOfSegmentsLeft(0)
-
-                        self.scalebar_qpt.attemptMove(QgsLayoutPoint(310, 243, QgsUnitTypes.LayoutMillimeters))
-                        # self.scalebar_qpt.setFixedSize(QgsLayoutSize(95, 15))
-
-                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A3_portrait_simple.qpt":
-                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
-                        map_item.setExtent(iface.mapCanvas().extent())
-                        map_item.attemptMove(QgsLayoutPoint(5, 40.642, QgsUnitTypes.LayoutMillimeters))
-                        map_item.attemptResize(QgsLayoutSize(287, 315, QgsUnitTypes.LayoutMillimeters))
-
-                        ## Ajout d'un titre à la mise en page
-                        title = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(title)
-                        titre = self.dlg.lineEdit_2.text()
-                        title.setText(titre)
-                        title.setFont(QFont("Calibri", 20))
-                        title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
-                        title.adjustSizeToText()
-                        layout.addItem(title)
-
-                        ## Ajout d'un sous titre à la mise en page
-                        subtitle = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(subtitle)
-                        titre = self.dlg.lineEdit_3.text()
-                        subtitle.setText(titre)
-                        subtitle.setFont(QFont("Calibri", 16))
-                        subtitle.attemptMove(QgsLayoutPoint(120, 22, QgsUnitTypes.LayoutMillimeters))
-                        subtitle.adjustSizeToText()
-                        layout.addItem(subtitle)
-
-                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A4_paysage_simple.qpt":
-                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
-                        map_item.setExtent(iface.mapCanvas().extent())
-                        map_item.attemptMove(QgsLayoutPoint(5, 23.5, QgsUnitTypes.LayoutMillimeters))
-                        map_item.attemptResize(QgsLayoutSize(287, 130, QgsUnitTypes.LayoutMillimeters))
-
-                        ## Ajout d'un titre à la mise en page
-                        title = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(title)
-                        titre = self.dlg.lineEdit_2.text()
-                        title.setText(titre)
-                        title.setFont(QFont("Calibri", 20))
-                        title.attemptMove(QgsLayoutPoint(120, 5, QgsUnitTypes.LayoutMillimeters))
-                        title.adjustSizeToText()
-                        layout.addItem(title)
-
-                        ## Ajout d'un sous titre à la mise en page
-                        subtitle = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(subtitle)
-                        titre = self.dlg.lineEdit_3.text()
-                        subtitle.setText(titre)
-                        subtitle.setFont(QFont("Calibri", 16))
-                        subtitle.attemptMove(QgsLayoutPoint(120, 15, QgsUnitTypes.LayoutMillimeters))
-                        subtitle.adjustSizeToText()
-                        layout.addItem(subtitle)
-
-
-                    if layout.name() == "2. BROUILLON Modèle_mep_carto_CEN_NA_A4_portrait_simple.qpt":
-
-                        map_item = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)][0]
-                        map_item.setExtent(iface.mapCanvas().extent())
-                        map_item.attemptMove(QgsLayoutPoint(3, 30, QgsUnitTypes.LayoutMillimeters))
-                        map_item.attemptResize(QgsLayoutSize(204, 183, QgsUnitTypes.LayoutMillimeters))
-
-                        ## Ajout d'un titre à la mise en page
-                        title = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(title)
-                        titre = self.dlg.lineEdit_2.text()
-                        title.setText(titre)
-                        title.setFont(QFont("Calibri", 20))
-                        title.attemptMove(QgsLayoutPoint(76, 5, QgsUnitTypes.LayoutMillimeters))
-                        title.adjustSizeToText()
-                        layout.addItem(title)
-
-                        ## Ajout d'un sous titre à la mise en page
-                        subtitle = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(subtitle)
-                        titre = self.dlg.lineEdit_3.text()
-                        subtitle.setText(titre)
-                        subtitle.setFont(QFont("Calibri", 16))
-                        subtitle.attemptMove(QgsLayoutPoint(76, 17, QgsUnitTypes.LayoutMillimeters))
-                        subtitle.adjustSizeToText()
-                        layout.addItem(subtitle)
-
                     self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
 
                     existing_layout = project.layoutManager().layoutByName(layout.name())
@@ -1380,7 +1263,42 @@ class MapCEN:
             #
             iface.openLayoutDesigner(layout_modifie)
 
+    def actualisation_mise_en_page(self):
 
+        if self.dlg.radioButton_6.isChecked() and self.dlg.radioButton_7.isChecked():
+
+            self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
+            self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
+            map_item.attemptMove(QgsLayoutPoint(7.5, 33, QgsUnitTypes.LayoutMillimeters))
+            map_item.attemptResize(QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters))
+            self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
+            self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
+            title.attemptMove(QgsLayoutPoint(50, 2, QgsUnitTypes.LayoutMillimeters))
+            title.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
+            subtitle.attemptMove(QgsLayoutPoint(50, 2, QgsUnitTypes.LayoutMillimeters))
+            subtitle.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
+            logo.attemptMove(QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters))
+            logo.setFixedSize(QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters))
+            legend.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
+            scalebar.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
+
+        if self.dlg.radioButton_6.isChecked() and self.dlg.radioButton_8.isChecked():
+            self.map_modele_test.attemptMove(QgsLayoutPoint(10, 30, QgsUnitTypes.LayoutMillimeters))
+            self.map_modele_test.attemptResize(QgsLayoutSize(250, 120, QgsUnitTypes.LayoutMillimeters))
+            title.attemptMove(QgsLayoutPoint(40, 2, QgsUnitTypes.LayoutMillimeters))
+            title.setFixedSize(QgsLayoutSize(200, 10, QgsUnitTypes.LayoutMillimeters))
+
+        if self.dlg.radioButton_5.isChecked() and self.dlg.radioButton_7.isChecked():
+            self.map_modele_test.attemptMove(QgsLayoutPoint(4, 20, QgsUnitTypes.LayoutMillimeters))
+            self.map_modele_test.attemptResize(QgsLayoutSize(300, 150, QgsUnitTypes.LayoutMillimeters))
+            title.attemptMove(QgsLayoutPoint(60, 2, QgsUnitTypes.LayoutMillimeters))
+            title.setFixedSize(QgsLayoutSize(250, 12, QgsUnitTypes.LayoutMillimeters))
+
+        if self.dlg.radioButton_5.isChecked() and self.dlg.radioButton_8.isChecked():
+            self.map_modele_test.attemptMove(QgsLayoutPoint(8, 25, QgsUnitTypes.LayoutMillimeters))
+            self.map_modele_test.attemptResize(QgsLayoutSize(270, 130, QgsUnitTypes.LayoutMillimeters))
+            title.attemptMove(QgsLayoutPoint(45, 2, QgsUnitTypes.LayoutMillimeters))
+            title.setFixedSize(QgsLayoutSize(220, 9, QgsUnitTypes.LayoutMillimeters))
 
 
     def niveau_zoom(self):

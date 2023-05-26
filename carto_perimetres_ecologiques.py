@@ -56,8 +56,6 @@ class module_perim_eco():
 
         self.dlg.mComboBox_3.addItems(nom_perim_eco)
 
-        self.dlg.label_15.setText("Périmètres écologiques :")
-        self.dlg.label_15.show()
 
 
     def chargement_perim_eco(self):

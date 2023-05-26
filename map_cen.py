@@ -204,6 +204,33 @@ class MapCEN:
         self.dlg.radioButton_7.setChecked(True)
 
 
+        # Je rassemble toutes mes variables que je veux initialiser à une valeur vide dans un dictionnaire pour qu'elles soient assignées à une valeur à partir d'une fonction spécifique This approach avoids cluttering your class with many individual variables
+        # Je fais ça pour éviter de d'encombrer de faire une liste de course de nombreuses variables individuelles.
+
+        self.template_parameters = {
+            'map_size': None,
+            'map_position' : None,
+            'title_position': None,
+            'title_size': None,
+            'subtitle_position': None,
+            'subtitle_size': None,
+            'logo_position': None,
+            'logo_size': None,
+            'legend_position': None,
+            'legend_size': None,
+            'scalebar_position': None,
+            'scalebar_size': None,
+            'north_position': None,
+            'north_size': None,
+            'credit_text_position': None,
+            'credit_text_size': None,
+            'credit_text2_position': None,
+            'credit_text2_size': None,
+            # Add more variables as needed
+        }
+
+
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -1017,10 +1044,18 @@ class MapCEN:
         self.dlg.mComboBox_2.addItems(sorted(couches))
 
 
+
     def chargement_qpt(self):
 
-        project = QgsProject.instance()
 
+        project = QgsProject.instance()
+        self.manager = project.layoutManager()
+        layout_name = self.dlg.comboBox.currentText()
+        layouts_list = self.manager.printLayouts()
+
+        for i in layouts_list:
+            if i.name() == layout_name:
+                self.manager.removeLayout(i)
 
         if self.dlg.comboBox.currentText() == " ":
             QMessageBox.question(iface.mainWindow(), u"Aucun template sélectionné !", "Veuillez sélectionner un modèle !", QMessageBox.Ok)
@@ -1029,73 +1064,77 @@ class MapCEN:
 
             for filename in glob.glob(self.plugin_path + "/mises_en_pages/*.qpt"):
                 with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                    layout = QgsPrintLayout(project)
-                    layout.initializeDefaults()
+                    self.layout = QgsPrintLayout(project)
+                    self.layout.initializeDefaults()
                     template_content = f.read()
                     doc = QDomDocument()
                     doc.setContent(template_content)
-                    layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
-                    layout.setName(os.path.basename(filename))
+                    self.layout.loadFromTemplate(doc, QgsReadWriteContext(), True)
+                    self.layout.setName(os.path.basename(filename))
 
-                    if layout.name() == "1. Modèle standard carto A4 (consolidé).qpt":
+
+                    if self.layout.name() == "1. Modèle standard carto A4 (consolidé).qpt":
+
+                        self.actualisation_mise_en_page()
 
                         ## Add map to layout
-                        self.map_modele_test = QgsLayoutItemMap(layout)
+                        self.map_modele_test = QgsLayoutItemMap(self.layout)
                         # Charger une carte vide
                         self.map_modele_test.setRect(20, 20, 20, 20)
                         # Mettre le canvas courant comme emprise
                         self.map_modele_test.setExtent(iface.mapCanvas().extent())
                         # Position de la carte dans le composeur
-                        self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
+
+                        self.map_modele_test.attemptMove(self.template_parameters['map_position'])
                         # on dimensionne le rendu de la carte (pour référence la page totale est une page A4 donc 297*210)
-                        self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
+                        self.map_modele_test.attemptResize(self.template_parameters['map_size'])
 
                         self.map_modele_test.refresh()
 
                         self.map_modele_test.setBackgroundColor(QColor(255, 255, 255, 255))
                         self.map_modele_test.setFrameEnabled(True)
-                        layout.addLayoutItem(self.map_modele_test)
+                        self.layout.addLayoutItem(self.map_modele_test)
                         self.map_modele_test.setId("carte_principale")
 
                         ## Ajout d'un titre à la mise en page
-                        title = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(title)
+                        title = QgsLayoutItemLabel(self.layout)
+                        self.layout.addLayoutItem(title)
                         titre = self.dlg.lineEdit_2.text()
                         title.setText(titre)
                         title.setFont(QFont("Calibri", 15, QFont.Bold))
-                        title.attemptMove(QgsLayoutPoint(50, 2, QgsUnitTypes.LayoutMillimeters))
-                        layout.addItem(title)
+                        title.attemptMove(self.template_parameters['title_position'])
+                        title.attemptResize(self.template_parameters['title_size'])
+                        self.layout.addItem(title)
                         # title.adjustSizeToText() on n'utilise plutot setFixedSize pour pouvoir centrer le titre de manière plus optimale ici
                         title.setHAlign(Qt.AlignHCenter)
                         title.setVAlign(Qt.AlignVCenter)
-                        title.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
 
 
                         ## Ajout d'un sous titre à la mise en page
-                        subtitle = QgsLayoutItemLabel(layout)
-                        layout.addLayoutItem(subtitle)
+                        subtitle = QgsLayoutItemLabel(self.layout)
+                        self.layout.addLayoutItem(subtitle)
                         titre = self.dlg.lineEdit_3.text()
                         subtitle.setText(titre)
                         subtitle.setFont(QFont("MS Shell Dlg 2", 10))
-                        subtitle.attemptMove(QgsLayoutPoint(50, 10, QgsUnitTypes.LayoutMillimeters))
-                        layout.addItem(subtitle)
+                        subtitle.attemptMove(self.template_parameters['subtitle_position'])
+                        subtitle.attemptResize(self.template_parameters['subtitle_size'])
+                        self.layout.addItem(subtitle)
                         subtitle.setHAlign(Qt.AlignHCenter)
                         subtitle.setVAlign(Qt.AlignVCenter)
-                        subtitle.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
 
 
                         ## Ajout du logo CEN NA en haut à gauche de la page
-                        logo = QgsLayoutItemPicture(layout)
+                        logo = QgsLayoutItemPicture(self.layout)
                         logo.setResizeMode(QgsLayoutItemPicture.Zoom)
                         logo.setMode(QgsLayoutItemPicture.FormatRaster)
-                        logo.attemptMove(QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters))
-                        logo.setFixedSize(QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters))
+                        logo.attemptMove(self.template_parameters['logo_position'])
+                        logo.setFixedSize(self.template_parameters['logo_size'])
                         logo.setPicturePath(self.plugin_path + '/logo.jpg')
-                        layout.addLayoutItem(logo)
+                        self.layout.addLayoutItem(logo)
 
 
                         ## Ajout de la legende :
-                        legend = QgsLayoutItemLegend(layout)
+                        legend = QgsLayoutItemLegend(self.layout)
 
                         legend.setId('legende_model1')
                         # legend.setTitle('Legende')
@@ -1104,17 +1143,13 @@ class MapCEN:
                         legend.setAutoUpdateModel(False)
 
                         legend.setLinkedMap(self.map_modele_test)
-                        layout.addItem(legend)
+                        self.layout.addItem(legend)
 
                         # group_name = 'Périmètres écologiques'  # Name of a group in your legend
 
                         checked_items = self.dlg.mComboBox_2.checkedItems()
 
                         layers_to_remove = []
-
-                        # for lyr in iface.mapCanvas().layers():
-                        #     if lyr.name() not in checked_items:
-                        #         layers_to_remove.append(lyr.name())
 
                         for lyr in project.mapLayers().values():
                             if lyr.name() not in checked_items:
@@ -1124,7 +1159,7 @@ class MapCEN:
                         root = project.layerTreeRoot()
 
                         # get legend
-                        legend = [i for i in layout.items() if isinstance(i, QgsLayoutItemLegend)][0]
+                        legend = [i for i in self.layout.items() if isinstance(i, QgsLayoutItemLegend)][0]
 
                         # disable auto-update
                         legend.setAutoUpdateModel(False)
@@ -1162,42 +1197,14 @@ class MapCEN:
                         legend.rstyle(QgsLegendStyle.Subgroup).setMargin(QgsLegendStyle.Top, 3)
 
                         legend.adjustBoxSize()
-                        layout.refresh()
+                        self.layout.refresh()
 
                         legend.updateLegend()
-
-                        legend.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
-
-                        # try:
-                        #     layout_clone
-                        # except:
-                        #     layout_clone = QgsProject.instance().layoutManager().layoutByName(
-                        #         '1. Modèle standard carto A4 (consolidé).qpt')  # je ne sais pas pourquoi il faut que je redéfinisse une variable pour layout mais autrement ça ne fonctionne pas
-                        #
-                        # # Retrieve width & height values of map item
-                        # legend_item = [i for i in layout_clone.items() if isinstance(i, QgsLayoutItemLegend)][0]
-                        # legend_height = legend_item.sizeWithUnits().height()
-                        # legend_width = legend_item.sizeWithUnits().width()
-                        #
-                        # print(legend_height)
-                        #
-                        # if legend_height <= 42:
-                        #     legend.setColumnCount(1)
-                        # elif legend_height > 42 and legend_height <= 84:
-                        #     legend.setColumnCount(2)
-                        # elif legend_height > 84 and legend_height <= 126:
-                        #     legend.setColumnCount(3)
-                        # elif legend_height > 126 or legend_width > 195:
-                        #     legend.setColumnCount(1)
-                        #     QMessageBox.question(iface.mainWindow(), u"Attention !",
-                        #                          "Le nombre d'éléments à intégrer à la légende est trop important pour être harmonisé automatiquement. Veuillez disposer les élements de légende manuellement",
-                        #                          QMessageBox.Ok)
-
-                        # legend.setWrapString("*")
+                        legend.attemptMove(self.template_parameters['legend_position'])
 
 
                         ## Ajout de l'échelle à la mise en page
-                        self.scalebar_qpt = QgsLayoutItemScaleBar(layout)
+                        self.scalebar_qpt = QgsLayoutItemScaleBar(self.layout)
                         self.scalebar_qpt.setStyle('Single Box')
                         self.scalebar_qpt.setLinkedMap(self.map_modele_test)
                         self.scalebar_qpt.applyDefaultSize()
@@ -1206,50 +1213,56 @@ class MapCEN:
                         self.scalebar_qpt.setNumberOfSegments(2)
                         self.scalebar_qpt.setNumberOfSegmentsLeft(0)
 
-                        layout.addLayoutItem(self.scalebar_qpt)
-                        self.scalebar_qpt.attemptMove(QgsLayoutPoint(207, 183, QgsUnitTypes.LayoutMillimeters))
+                        self.scalebar_qpt.attemptMove(self.template_parameters['scalebar_position'])
+                        self.scalebar_qpt.attemptResize(self.template_parameters['scalebar_size'])
+
+
+                        self.layout.addLayoutItem(self.scalebar_qpt)
                         # self.scalebar_qpt.setFixedSize(QgsLayoutSize(55, 15))
 
                         # ajout de la fleche du Nord
-                        north = QgsLayoutItemPicture(layout)
+                        north = QgsLayoutItemPicture(self.layout)
                         north.setPicturePath(self.plugin_path + "/NorthArrow_02.svg")
-                        layout.addLayoutItem(north)
-                        north.attemptResize(QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters))
-                        north.attemptMove(QgsLayoutPoint(273, 182, QgsUnitTypes.LayoutMillimeters))
+                        self.layout.addLayoutItem(north)
+                        north.attemptMove(self.template_parameters['north_position'])
+                        north.attemptResize(self.template_parameters['north_size'])
 
-                        #ajout note info:
-                        info = ["Réalisation : " + "DSI / CEN Nouvelle-Aquitaine (" + date.today().strftime("%d/%m/%Y") + ")"]
+                        # ajout note info:
+                        info = ["Réalisation : " + "DSI / CEN Nouvelle-Aquitaine (" + date.today().strftime(
+                            "%d/%m/%Y") + ")"]
                         info2 = ["Source : " + self.dlg.lineEdit_4.text()]
-                        credit_text = QgsLayoutItemLabel(layout)
+                        credit_text = QgsLayoutItemLabel(self.layout)
                         credit_text.setText(info[0])
                         credit_text.setFont(QFont("Calibri", 9))
                         credit_text.setHAlign(Qt.AlignRight)
                         credit_text.setVAlign(Qt.AlignVCenter)
                         credit_text.setItemRotation(-90)
-                        credit_text2 = QgsLayoutItemLabel(layout)
+                        credit_text2 = QgsLayoutItemLabel(self.layout)
                         credit_text2.setText(info2[0])
                         credit_text2.setFont(QFont("Calibri", 9))
                         credit_text2.setHAlign(Qt.AlignRight)
                         credit_text2.setVAlign(Qt.AlignVCenter)
-                        layout.addLayoutItem(credit_text)
-                        layout.addLayoutItem(credit_text2)
-                        credit_text.attemptMove(QgsLayoutPoint(291.5, 123, QgsUnitTypes.LayoutMillimeters))
-                        credit_text.attemptResize(QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters))
-                        credit_text2.attemptMove(QgsLayoutPoint(189, 168.5, QgsUnitTypes.LayoutMillimeters))
-                        credit_text2.attemptResize(QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters))
+                        credit_text.attemptMove(self.template_parameters['credit_text_position'])
+                        credit_text.attemptResize(self.template_parameters['credit_text_size'])
+                        credit_text2.attemptMove(self.template_parameters['credit_text2_position'])
+                        credit_text2.attemptResize(self.template_parameters['credit_text2_size'])
+                        self.layout.addLayoutItem(credit_text)
+                        self.layout.addLayoutItem(credit_text2)
 
-                        credit_text2.adjustSizeToText()
                         # credit_text.attemptResize(QgsLayoutSize(95, 5, QgsUnitTypes.LayoutMillimeters))
-
 
                     self.bar_echelle_auto(iface.mapCanvas(), self.scalebar_qpt)
 
-                    existing_layout = project.layoutManager().layoutByName(layout.name())
+                    existing_layout = project.layoutManager().layoutByName(self.layout.name())
                     if existing_layout:
                         project.layoutManager().removeLayout(existing_layout)
 
-                    result = project.layoutManager().addLayout(layout)
+                    result = project.layoutManager().addLayout(self.layout)
                     print(result)
+
+
+
+                    self.manager.addLayout(self.layout)
 
 
             fichier_mise_en_page = self.dlg.comboBox.currentText()
@@ -1263,42 +1276,145 @@ class MapCEN:
             #
             iface.openLayoutDesigner(layout_modifie)
 
+
     def actualisation_mise_en_page(self):
+
 
         if self.dlg.radioButton_6.isChecked() and self.dlg.radioButton_7.isChecked():
 
-            self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
-            self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
-            map_item.attemptMove(QgsLayoutPoint(7.5, 33, QgsUnitTypes.LayoutMillimeters))
-            map_item.attemptResize(QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters))
-            self.map_modele_test.attemptMove(QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters))
-            self.map_modele_test.attemptResize(QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters))
-            title.attemptMove(QgsLayoutPoint(50, 2, QgsUnitTypes.LayoutMillimeters))
-            title.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
-            subtitle.attemptMove(QgsLayoutPoint(50, 2, QgsUnitTypes.LayoutMillimeters))
-            subtitle.setFixedSize(QgsLayoutSize(225, 8, QgsUnitTypes.LayoutMillimeters))
-            logo.attemptMove(QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters))
-            logo.setFixedSize(QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters))
-            legend.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
-            scalebar.attemptMove(QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters))
+            pc = self.layout.pageCollection()
+            pc.pages()[0].setPageSize('A4', QgsLayoutItemPage.Portrait)
+
+            self.template_parameters['map_size'] = QgsLayoutSize(199, 175, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['map_position'] = QgsLayoutPoint(5, 25, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['title_size'] = QgsLayoutSize(200, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['title_position'] = QgsLayoutPoint(5, 2, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['subtitle_size'] = QgsLayoutSize(200, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['subtitle_position'] = QgsLayoutPoint(5, 12, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['logo_size'] = QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['logo_position'] = QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['legend_size'] = QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['legend_position'] = QgsLayoutPoint(5, 205, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['scalebar_size'] = QgsLayoutSize(55, 15, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['scalebar_position'] = QgsLayoutPoint(145, 215, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['north_size'] = QgsLayoutSize(12, 12, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['north_position'] = QgsLayoutPoint(193, 214, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text_position'] = QgsLayoutPoint(205, 125, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text2_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text2_position'] = QgsLayoutPoint(104, 201, QgsUnitTypes.LayoutMillimeters)
+
+
 
         if self.dlg.radioButton_6.isChecked() and self.dlg.radioButton_8.isChecked():
-            self.map_modele_test.attemptMove(QgsLayoutPoint(10, 30, QgsUnitTypes.LayoutMillimeters))
-            self.map_modele_test.attemptResize(QgsLayoutSize(250, 120, QgsUnitTypes.LayoutMillimeters))
-            title.attemptMove(QgsLayoutPoint(40, 2, QgsUnitTypes.LayoutMillimeters))
-            title.setFixedSize(QgsLayoutSize(200, 10, QgsUnitTypes.LayoutMillimeters))
+
+            pc = self.layout.pageCollection()
+            pc.pages()[0].setPageSize('A4', QgsLayoutItemPage.Landscape)
+
+            self.template_parameters['map_size'] = QgsLayoutSize(285, 145, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['map_position'] = QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['title_size'] = QgsLayoutSize(286, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['title_position'] = QgsLayoutPoint(5, 2, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['subtitle_size'] = QgsLayoutSize(286, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['subtitle_position'] = QgsLayoutPoint(5, 10, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['logo_size'] = QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['logo_position'] = QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['legend_size'] = QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['legend_position'] = QgsLayoutPoint(5, 168, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['scalebar_size'] = QgsLayoutSize(55, 15, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['scalebar_position'] = QgsLayoutPoint(207, 183, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['north_size'] = QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['north_position'] = QgsLayoutPoint(273, 182, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text_position'] = QgsLayoutPoint(291.5, 123, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text2_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text2_position'] = QgsLayoutPoint(189, 168.5, QgsUnitTypes.LayoutMillimeters)
+
+
 
         if self.dlg.radioButton_5.isChecked() and self.dlg.radioButton_7.isChecked():
-            self.map_modele_test.attemptMove(QgsLayoutPoint(4, 20, QgsUnitTypes.LayoutMillimeters))
-            self.map_modele_test.attemptResize(QgsLayoutSize(300, 150, QgsUnitTypes.LayoutMillimeters))
-            title.attemptMove(QgsLayoutPoint(60, 2, QgsUnitTypes.LayoutMillimeters))
-            title.setFixedSize(QgsLayoutSize(250, 12, QgsUnitTypes.LayoutMillimeters))
+
+            pc = self.layout.pageCollection()
+            pc.pages()[0].setPageSize('A3', QgsLayoutItemPage.Portrait)
+
+
+            self.template_parameters['map_size'] = QgsLayoutSize(285, 260, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['map_position'] = QgsLayoutPoint(6, 23, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['title_size'] = QgsLayoutSize(286, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['title_position'] = QgsLayoutPoint(5, 2, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['subtitle_size'] = QgsLayoutSize(286, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['subtitle_position'] = QgsLayoutPoint(5, 10, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['logo_size'] = QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['logo_position'] = QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['legend_size'] = QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['legend_position'] = QgsLayoutPoint(5, 284, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['scalebar_size'] = QgsLayoutSize(50, 15, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['scalebar_position'] = QgsLayoutPoint(207, 298, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['north_size'] = QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['north_position'] = QgsLayoutPoint(273, 297, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text_position'] = QgsLayoutPoint(291.5, 123, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text2_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text2_position'] = QgsLayoutPoint(189, 284, QgsUnitTypes.LayoutMillimeters)
+
+
 
         if self.dlg.radioButton_5.isChecked() and self.dlg.radioButton_8.isChecked():
-            self.map_modele_test.attemptMove(QgsLayoutPoint(8, 25, QgsUnitTypes.LayoutMillimeters))
-            self.map_modele_test.attemptResize(QgsLayoutSize(270, 130, QgsUnitTypes.LayoutMillimeters))
-            title.attemptMove(QgsLayoutPoint(45, 2, QgsUnitTypes.LayoutMillimeters))
-            title.setFixedSize(QgsLayoutSize(220, 9, QgsUnitTypes.LayoutMillimeters))
+
+            pc = self.layout.pageCollection()
+            pc.pages()[0].setPageSize('A3', QgsLayoutItemPage.Landscape)
+
+            self.template_parameters['map_size'] = QgsLayoutSize(408.5, 222, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['map_position'] = QgsLayoutPoint(5, 23.5, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['title_size'] = QgsLayoutSize(409, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['title_position'] = QgsLayoutPoint(5, 2, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['subtitle_size'] = QgsLayoutSize(409, 8, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['subtitle_position'] = QgsLayoutPoint(5, 10, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['logo_size'] = QgsLayoutSize(46, 16, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['logo_position'] = QgsLayoutPoint(5, 4, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['legend_size'] = QgsLayoutSize(405, 203, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['legend_position'] = QgsLayoutPoint(5, 249, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['scalebar_size'] = QgsLayoutSize(55, 15, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['scalebar_position'] = QgsLayoutPoint(323, 270, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['north_size'] = QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['north_position'] = QgsLayoutPoint(402, 270, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text_position'] = QgsLayoutPoint(415, 123, QgsUnitTypes.LayoutMillimeters)
+
+            self.template_parameters['credit_text2_size'] = QgsLayoutSize(100, 3.9, QgsUnitTypes.LayoutMillimeters)
+            self.template_parameters['credit_text2_position'] = QgsLayoutPoint(313, 247, QgsUnitTypes.LayoutMillimeters)
+
 
 
     def niveau_zoom(self):

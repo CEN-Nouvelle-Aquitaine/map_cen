@@ -53,7 +53,7 @@ class module_loc_generale():
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
         self.depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
 
-        departement = self.dlg.comboBox_2.currentText()[0:2]
+        departement = self.dlg.mComboBox_4.currentText()[0:2]
 
         self.depts_NA.selectByExpression('"insee_dep"= \'%s\'' % departement, QgsVectorLayer.SetSelection)
 
@@ -333,8 +333,8 @@ class module_loc_generale():
     def highlight_features(self):
 
         # rules = (
-        #     ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#e7eaee', 0.8),
-        #     ('Département sélectionné', '"insee_dep" IS \'{}\''.format(self.dlg.comboBox_2.currentText()[0:2]), '#fff', 0),
+        #     ('Reste de la région NA', '"insee_dep" IS NOT\'{}\''.format(self.dlg.mComboBox_4.currentText()[0:2]), '#e7eaee', 0.8),
+        #     ('Département sélectionné', '"insee_dep" IS \'{}\''.format(self.dlg.mComboBox_4.currentText()[0:2]), '#fff', 0),
         # )
 
         # symbol = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())

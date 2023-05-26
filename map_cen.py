@@ -1025,7 +1025,7 @@ class MapCEN:
     def liste_couche_template(self):
 
 
-        if self.dlg.comboBox.currentText() == "1. Modèle standard carto A4 (consolidé).qpt":
+        if self.dlg.comboBox.currentText() == "1. Modèle carto standard (consolidé).qpt":
             self.dlg.lineEdit_4.setEnabled(True)
             self.dlg.mComboBox_2.setEnabled(True)
         else:
@@ -1073,7 +1073,7 @@ class MapCEN:
                     self.layout.setName(os.path.basename(filename))
 
 
-                    if self.layout.name() == "1. Modèle standard carto A4 (consolidé).qpt":
+                    if self.layout.name() == "1. Modèle carto standard (consolidé).qpt":
 
                         self.actualisation_mise_en_page()
 

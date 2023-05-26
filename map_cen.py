@@ -96,6 +96,9 @@ class OptionsWindow(QWidget):
 
         # OptionsWindow().exec_()
 
+        self.dlg = MapCENDialog()
+        # self.module_loc_generale = module_loc_generale()
+
     def set_resolution(self, resolution):
         self.a = resolution
         MapCEN.export(self)
@@ -1006,19 +1009,29 @@ class MapCEN:
 
     def export(self):
 
+
         fileName = QFileDialog.getSaveFileName(None, 'Sauvegarder en jpg', '', filter='*.jpg')
         if fileName:
             dossier_sauvegarde = fileName[0]
 
-        self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (MFU)')
+        ###  -------------------- Automatisation de la mise en page ----------------------- ###
+        if self.dlg.comboBox_3.currentText() == "Périmètres écologiques":
+            self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (Périmètres écologiques)')
+        elif self.dlg.comboBox_3.currentText() == "Localisation de sites":
+            self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (Carto de localisation générale)')
+        else:
+            self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (MFU)')
 
-        self.layout.renderContext().setDpi(300)
+        print("AAA")
+        print(self.dlg.comboBox_3.currentText())  #combobBox_3 ne semble pas exister en étant appeller depuis OptionsWindow ???!
 
-        exporter = QgsLayoutExporter(self.layout)
-        settings = QgsLayoutExporter.ImageExportSettings()
-
-
-        result_png = exporter.exportToImage(dossier_sauvegarde, settings)
+        # self.layout.renderContext().setDpi(300)
+        #
+        # exporter = QgsLayoutExporter(self.layout)
+        # settings = QgsLayoutExporter.ImageExportSettings()
+        #
+        #
+        # result_png = exporter.exportToImage(dossier_sauvegarde, settings)
 
         # print(result_png)  # 0 = export réussi !
 

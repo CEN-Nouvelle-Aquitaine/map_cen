@@ -774,6 +774,11 @@ QWidget#tab_3{background-image: url(:/plugins/map_cen/Capture.png)}</string>
       <property name="insertPolicy">
        <enum>QComboBox::InsertAlphabetically</enum>
       </property>
+      <item>
+       <property name="text">
+        <string/>
+       </property>
+      </item>
      </widget>
      <widget class="QLineEdit" name="lineEdit_2">
       <property name="enabled">

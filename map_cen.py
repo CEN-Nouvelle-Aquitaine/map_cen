@@ -377,23 +377,30 @@ class MapCEN:
                                  "Aucun site ne peut être à cheval sur plus de 3 départements, veuillez limiter la sélection à 3 sites !",
                                  QMessageBox.Ok)
 
-
         if self.dlg.mComboBox_4.currentIndex != -1:
             for p in self.vlayer.getFeatures(QgsFeatureRequest().setFilterExpression(expression_filtre)):
+
+                codesite_index = p.fields().indexFromName('codesite')
+                nom_site_index = p.fields().indexFromName('nom_site')
+
                 if self.dlg.checkBox.isChecked():
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[0]))
+                    self.listes_sites_MFU_filtered.append(str(p[codesite_index]))
                 else:
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
-            print("yes")
+                    self.listes_sites_MFU_filtered.append(str(p[nom_site_index]))
+
             print(self.vlayer.selectedFeatures())
 
         else:
             for p in self.vlayer.getFeatures():
+
+                codesite_index = p.fields().indexFromName('codesite')
+                nom_site_index = p.fields().indexFromName('nom_site')
+
                 if self.dlg.checkBox.isChecked():
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[0]))
+                    self.listes_sites_MFU_filtered.append(str(p[codesite_index]))
                 else:
-                    self.listes_sites_MFU_filtered.append(str(p.attributes()[1]))
-            print("non")
+                    self.listes_sites_MFU_filtered.append(str(p[nom_site_index]))
+
             print(self.vlayer.selectedFeatures()[0])
 
         # print(self.dlg.mComboBox.checkedItems())
@@ -457,7 +464,8 @@ class MapCEN:
         self.listes_sites_MFU = []
 
         for p in self.vlayer.getFeatures():
-            self.listes_sites_MFU.append(str(p.attributes()[1]))
+            nom_site_index = p.fields().indexFromName('nom_site')
+            self.listes_sites_MFU.append(str(p[nom_site_index]))
 
         # completer = QCompleter(self.listes_sites_MFU)
         # completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -487,11 +495,13 @@ class MapCEN:
 
         if self.dlg.checkBox.isChecked():
             for p in self.vlayer.getFeatures():
-                self.listes_sites_MFU.append(str(p.attributes()[0]))  #ne pas chopper la colonne par index mais par son nom (plus propre) à faire !!!!!!!!!!!!!!!!!
+                codesite_index = p.fields().indexFromName('codesite')
+                self.listes_sites_MFU.append(str(p[codesite_index]))
 
         else:
             for p in self.vlayer.getFeatures():
-                self.listes_sites_MFU.append(str(p.attributes()[1]))
+                nom_site_index = p.fields().indexFromName('nom_site')
+                self.listes_sites_MFU.append(str(p[nom_site_index]))
 
         self.dlg.mComboBox.addItems(self.listes_sites_MFU)
 
@@ -540,11 +550,6 @@ class MapCEN:
 
         else:
             return None
-
-        single_symbol_renderer = self.depts_NA.renderer()
-
-        symbol = single_symbol_renderer.symbol()
-        symbol.setColor(QColor.fromRgb(255, 0, 0, 0))
 
     def onTextChanged(self, filter_text):
 
@@ -734,6 +739,18 @@ class MapCEN:
 
 
     def mise_en_page(self):
+
+        myRenderer = self.depts_NA.renderer()
+
+        if self.depts_NA.geometryType() == QgsWkbTypes.PolygonGeometry:
+            mySymbol1 = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())
+            fill_layer = QgsSimpleFillSymbolLayer.create(
+                {'color': '255,255,255,255', 'outline_color': '0,0,0,255', 'outline_width': '0.1'}
+            )
+            mySymbol1.changeSymbolLayer(0, fill_layer)
+            myRenderer.setSymbol(mySymbol1)
+
+        self.depts_NA.triggerRepaint()
 
         self.dlg.horizontalSlider.setValue(0)
 

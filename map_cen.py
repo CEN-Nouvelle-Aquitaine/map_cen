@@ -835,12 +835,13 @@ class MapCEN:
         # forward transformation: src -> dest
         extent = xform.transform(self.depts_NA.extent())
 
-
         my_map2.setExtent(extent)
         my_map2.setScale(30000000)
 
         my_map2.attemptMove(QgsLayoutPoint(213, 28, QgsUnitTypes.LayoutMillimeters))
         my_map2.attemptResize(QgsLayoutSize(63, 63, QgsUnitTypes.LayoutMillimeters))
+
+        my_map2.refresh()
 
         self.layout.addLayoutItem(my_map2)
 
@@ -940,7 +941,7 @@ class MapCEN:
         self.scalebar.setNumberOfSegmentsLeft(0)
 
         self.layout.addLayoutItem(self.scalebar)
-        self.scalebar.attemptMove(QgsLayoutPoint(222,173, QgsUnitTypes.LayoutMillimeters))
+        self.scalebar.attemptMove(QgsLayoutPoint(222,178, QgsUnitTypes.LayoutMillimeters))
         self.scalebar.setFixedSize(QgsLayoutSize(50, 15))
 
 
@@ -949,7 +950,7 @@ class MapCEN:
         north.setPicturePath(self.plugin_path + "/NorthArrow_02.svg")
         self.layout.addLayoutItem(north)
         north.attemptResize(QgsLayoutSize(8.4, 12.5, QgsUnitTypes.LayoutMillimeters))
-        north.attemptMove(QgsLayoutPoint(205,172, QgsUnitTypes.LayoutMillimeters))
+        north.attemptMove(QgsLayoutPoint(205,178, QgsUnitTypes.LayoutMillimeters))
 
 
 
@@ -983,7 +984,7 @@ class MapCEN:
         temp_layer = self.vlayer.materialize(QgsFeatureRequest().setFilterFids(self.vlayer.selectedFeatureIds()))
 
         surf_parcelles_site_selectionne = temp_layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
-        surf_ha = surf_parcelles_site_selectionne[0]
+        surf_ha = round(surf_parcelles_site_selectionne[0],2)
         info3 = "Surface totale maîtrisée sur le site : " + str(surf_ha) + " ha."
         credit_text3 = QgsLayoutItemLabel(self.layout)
         credit_text3.setText(info3)

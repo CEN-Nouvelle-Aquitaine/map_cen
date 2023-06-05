@@ -60,6 +60,7 @@ class module_perim_eco():
 
     def chargement_perim_eco(self):
 
+
         # On lit le fichier csv contenant les flux CEN sous forme de dictionnaire et on en extrait tous les noms techniques correspondant à la catégorie "Périmètres écologiques":
         url_open = urllib.request.urlopen(
             "https://raw.githubusercontent.com/CEN-Nouvelle-Aquitaine/fluxcen/main/flux.csv")
@@ -76,27 +77,60 @@ class module_perim_eco():
         #On charge les sites gérés :
         self.test = [row for row in self.csvReader if row['Nom_couche_plugin'] in self.dlg.mComboBox_3.checkedItems()]
 
-        for item in self.test:
-            item.update({"version": "1.0.0", "request": "GetFeature"})
-            url = item['url']
-            typename = item['nom_technique']
-            request = item['request']
-            version = item['version']
-            final_url = f"{url}VERSION={version}&TYPENAME={typename}&request={request}"
-            uri = final_url
 
-            self.perim_eco_layer = QgsVectorLayer(uri, item['Nom_couche_plugin'], "WFS")
-            self.perim_eco_layer.loadNamedStyle(os.path.dirname(__file__) + '/styles_couches/' + item['Nom_couche_plugin'] +'.qml')
-            self.perim_eco_layer.triggerRepaint()
+        if len(self.dlg.mComboBox_3.checkedItems()) > 4:
+            self.QMBquestion = QMessageBox.question(iface.mainWindow(), u"Attention !",
+                                                    "Le nombre de périmètres écologiques est limité à 4 par défaut pour des questions de performances. Souhaitez vous tout de même charger les " + str(
+                                                        len(self.dlg.mComboBox_3.checkedItems())) + " périmètres sélectionnés ? (risque de plantage de QGIS)",
+                                                    QMessageBox.Yes | QMessageBox.No)
 
-            QgsProject.instance().addMapLayer(self.perim_eco_layer)
+            if self.QMBquestion == QMessageBox.No:
+                print("Annulation du chargement des couches")
+                execute_code = False  # Set flag to False
 
 
+        execute_code = len(self.dlg.mComboBox_3.checkedItems()) < 4 or self.QMBquestion == QMessageBox.Yes
+
+        if execute_code:
+            for item in self.test:
+                item.update({"version": "1.0.0", "request": "GetFeature"})
+                url = item['url']
+                typename = item['nom_technique']
+                request = item['request']
+                version = item['version']
+                final_url = f"{url}VERSION={version}&TYPENAME={typename}&request={request}"
+                uri = final_url
+
+                layer_name = item['Nom_couche_plugin']
+                existing_layers = QgsProject.instance().mapLayersByName(layer_name)
+
+                if not existing_layers:
+                    self.perim_eco_layer = QgsVectorLayer(uri, layer_name, "WFS")
+                    self.perim_eco_layer.loadNamedStyle(
+                        os.path.dirname(__file__) + '/styles_couches/' + layer_name + '.qml')
+                    self.perim_eco_layer.triggerRepaint()
+
+                    QgsProject.instance().addMapLayer(self.perim_eco_layer)
+                else:
+                    print(f"La couche '{layer_name}' est déjà chargée dans QGIS")
 
     def mise_en_page(self):
 
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
         depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
+
+
+        myRenderer = depts_NA.renderer()
+
+        if depts_NA.geometryType() == QgsWkbTypes.PolygonGeometry:
+            mySymbol1 = QgsSymbol.defaultSymbol(depts_NA.geometryType())
+            fill_layer = QgsSimpleFillSymbolLayer.create(
+                {'color': '255,255,255,0', 'outline_color': '0,0,0,255', 'outline_width': '0.1'}
+            )
+            mySymbol1.changeSymbolLayer(0, fill_layer)
+            myRenderer.setSymbol(mySymbol1)
+
+        depts_NA.triggerRepaint()
 
         vlayer.removeSelection()
 
@@ -253,7 +287,7 @@ class module_perim_eco():
         title.setText(titre)
         title.setFont(QFont("Calibri", 16, QFont.Bold))
         title.attemptMove(QgsLayoutPoint(5, 6, QgsUnitTypes.LayoutMillimeters))
-        title.attemptResize(QgsLayoutSize(287, 7, QgsUnitTypes.LayoutMillimeters))
+        title.attemptResize(QgsLayoutSize(297, 7, QgsUnitTypes.LayoutMillimeters))
         title.setHAlign(Qt.AlignHCenter)
         title.setVAlign(Qt.AlignHCenter)
         title.adjustSizeToText()
@@ -267,7 +301,7 @@ class module_perim_eco():
         subtitle.setText(titre)
         subtitle.setFont(QFont("Calibri", 14))
         subtitle.attemptMove(QgsLayoutPoint(5, 14, QgsUnitTypes.LayoutMillimeters))
-        subtitle.attemptResize(QgsLayoutSize(287, 7, QgsUnitTypes.LayoutMillimeters))
+        subtitle.attemptResize(QgsLayoutSize(297, 7, QgsUnitTypes.LayoutMillimeters))
         subtitle.setHAlign(Qt.AlignHCenter)
         subtitle.setVAlign(Qt.AlignHCenter)
         subtitle.adjustSizeToText()

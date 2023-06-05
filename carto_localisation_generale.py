@@ -53,6 +53,21 @@ class module_loc_generale():
         vlayer = QgsProject.instance().mapLayersByName("Sites gérés CEN-NA")[0]
         self.depts_NA = QgsProject.instance().mapLayersByName("Département")[0]
 
+
+        myRenderer = self.depts_NA.renderer()
+
+        if self.depts_NA.geometryType() == QgsWkbTypes.PolygonGeometry:
+            mySymbol1 = QgsSymbol.defaultSymbol(self.depts_NA.geometryType())
+            fill_layer = QgsSimpleFillSymbolLayer.create(
+                {'color': '255,255,255,0', 'outline_color': '0,0,0,255', 'outline_width': '0.1'}
+            )
+            mySymbol1.changeSymbolLayer(0, fill_layer)
+            myRenderer.setSymbol(mySymbol1)
+
+        self.depts_NA.triggerRepaint()
+
+
+
         departement = self.dlg.mComboBox_4.currentText()[0:2]
 
         self.depts_NA.selectByExpression('"insee_dep"= \'%s\'' % departement, QgsVectorLayer.SetSelection)

@@ -86,12 +86,12 @@ class module_perim_eco():
 
             if self.QMBquestion == QMessageBox.No:
                 print("Annulation du chargement des couches")
-                execute_code = False  # Set flag to False
+                execute_code = False  # Use a flag variable to determine whether to execute the code or not
 
 
         execute_code = len(self.dlg.mComboBox_3.checkedItems()) < 4 or self.QMBquestion == QMessageBox.Yes
 
-        if execute_code:
+        if execute_code: #the flag variable execute_code is set to True when the condition len(self.dlg.mComboBox_3.checkedItems()) < 4 or self.QMBquestion == QMessageBox.Yes is True. If either of these conditions is True, the flag will be True, and the code block will be executed.
             for item in self.test:
                 item.update({"version": "1.0.0", "request": "GetFeature"})
                 url = item['url']

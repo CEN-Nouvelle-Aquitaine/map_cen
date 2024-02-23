@@ -45,6 +45,22 @@ from datetime import date
 from .carto_perimetres_ecologiques import module_perim_eco
 from .carto_localisation_generale import module_loc_generale
 
+
+
+# # Vérifier la connexion à internet
+# try:
+#     # Vérifier si l'utilisateur est connecté à internet en ouvrant une connexion avec un site web
+#     host = socket.gethostbyname("www.google.com")
+#     s = socket.create_connection((host, 80), 2)
+#     s.close()
+# except socket.error:
+#     # Afficher un message si l'utilisateur n'est pas connecté à internet
+#     QMessageBox.warning(None, 'Avertissement',
+#                         'Vous n\'êtes actuellement pas connecté à internet. Veuillez vous connecter pour pouvoir utiliser toutes les fonctionnalités de MapCEN !')
+
+
+
+
 class Popup(QWidget):
     def __init__(self, parent=None):
         super(Popup, self).__init__(parent)

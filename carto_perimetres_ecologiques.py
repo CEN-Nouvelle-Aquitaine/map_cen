@@ -1,24 +1,26 @@
-import urllib
-import csv
-import io
-
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
-from PyQt5 import *
 from PyQt5.QtCore import Qt
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
-from qgis.PyQt.QtXml import QDomDocument
+from qgis.utils import iface
+from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.PyQt.QtGui import QFont, QColor
+
+from qgis.core import (
+    QgsProject, QgsSymbol, QgsWkbTypes, QgsSimpleFillSymbolLayer, QgsVectorLayer,
+    QgsRuleBasedRenderer, QgsGeometryGeneratorSymbolLayer, QgsPrintLayout, 
+    QgsLayoutItemMap, QgsLayoutPoint, QgsUnitTypes, QgsLayoutSize, 
+    QgsLayoutItemLegend, QgsLayoutItemLabel, QgsLayoutItemPicture, QgsLayoutItemScaleBar)
+
+
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .map_cen_dialog import MapCENDialog
+
 import os.path
-
-
+import urllib
+import csv
+import io
 from datetime import date
+
 
 class module_perim_eco():
 

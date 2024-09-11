@@ -23,7 +23,7 @@
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QFont, QIcon, QMovie, QDesktopServices, QColor
-from qgis.PyQt.QtWidgets import QWidget, QAction, QTextBrowser, QMessageBox, QLabel, QPushButton
+from qgis.PyQt.QtWidgets import QWidget, QAction, QTextBrowser, QMessageBox, QLabel, QPushButton, QFileDialog
 from qgis.utils import iface
 from qgis.gui import QgsMapToolPan
 
@@ -1063,7 +1063,6 @@ class MapCEN:
         else:
             self.layout = QgsProject.instance().layoutManager().layoutByName('Mise en page automatique MapCEN (MFU)')
 
-        print("AAA")
         print(self.dlg.comboBox_3.currentText())  #combobBox_3 ne semble pas exister en étant appeller depuis OptionsWindow ???!
 
         # self.layout.renderContext().setDpi(300)

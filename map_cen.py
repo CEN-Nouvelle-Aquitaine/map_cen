@@ -21,14 +21,22 @@
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
-from PyQt5 import *
-from PyQt5.QtCore import Qt
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtGui import QFont, QIcon, QMovie, QDesktopServices, QColor
+from qgis.PyQt.QtWidgets import QWidget, QAction, QTextBrowser, QMessageBox, QLabel, QPushButton
+from qgis.utils import iface
+from qgis.gui import QgsMapToolPan
+
+from qgis.core import (
+    Qgis, QgsApplication, QgsRasterLayer, QgsVectorLayer,
+    QgsProject, QgsFeatureRequest, QgsCoordinateReferenceSystem, QgsSymbol, 
+    QgsRuleBasedRenderer, QgsLayoutItemPicture, QgsLayoutItemLabel, 
+    QgsLayerTree, QgsLayoutItemLegend, QgsCoordinateTransform,
+    QgsUnitTypes, QgsLayoutSize, QgsLayoutPoint, QgsPrintLayout,
+    QgsGeometryGeneratorSymbolLayer, QgsWkbTypes, QgsSimpleFillSymbolLayer, QgsLayoutItemMap,
+    QgsLayoutItemScaleBar, QgsAggregateCalculator
+)
+
 from qgis.PyQt.QtXml import QDomDocument
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -36,8 +44,7 @@ from .resources import *
 from .map_cen_dialog import MapCENDialog
 import os.path
 import urllib
-import csv
-import io
+import glob
 
 from datetime import date
 
@@ -74,8 +81,8 @@ class Popup(QWidget):
         fp.close()
 
         self.text_edit.setHtml(html_changelog)
-        self.text_edit.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
-        self.text_edit.anchorClicked.connect(QtGui.QDesktopServices.openUrl)
+        self.text_edit.setFont(QFont("Calibri",weight=QFont.Bold))
+        self.text_edit.anchorClicked.connect(QDesktopServices.openUrl)
         self.text_edit.setOpenLinks(False)
 
         self.text_edit.setWindowTitle("Nouveautés")
@@ -90,7 +97,7 @@ class OptionsWindow(QWidget):
         self.setMaximumSize(300,200)
 
         titre = QLabel(self)
-        titre.setFont(QtGui.QFont("Calibri",weight=QtGui.QFont.Bold))
+        titre.setFont(QFont("Calibri",weight=QFont.Bold))
         titre.move(70, 20)
         titre.setText("Résolution de la carte à exporter :")
         a = QPushButton("Haute résolution", self)
@@ -999,8 +1006,8 @@ class MapCEN:
 
         temp_layer = self.vlayer.materialize(QgsFeatureRequest().setFilterFids(self.vlayer.selectedFeatureIds()))
 
-        surf_parcelles_site_selectionne = temp_layer.aggregate(QgsAggregateCalculator.Sum, "contenance")
-        surf_ha = round(surf_parcelles_site_selectionne[0],2)
+        surf_parcelles_site_selectionne = temp_layer.aggregate(QgsAggregateCalculator.Sum, "contenance_mfu_m2")
+        surf_ha = round(surf_parcelles_site_selectionne[0] / 10000, 2)
         info3 = "Surface totale maîtrisée sur le site : " + str(surf_ha) + " ha."
         credit_text3 = QgsLayoutItemLabel(self.layout)
         credit_text3.setText(info3)

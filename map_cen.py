@@ -34,7 +34,8 @@ from qgis.core import (
     QgsLayerTree, QgsLayoutItemLegend, QgsCoordinateTransform,
     QgsUnitTypes, QgsLayoutSize, QgsLayoutPoint, QgsPrintLayout,
     QgsGeometryGeneratorSymbolLayer, QgsWkbTypes, QgsSimpleFillSymbolLayer, QgsLayoutItemMap,
-    QgsLayoutItemScaleBar, QgsAggregateCalculator
+    QgsLayoutItemScaleBar, QgsAggregateCalculator, QgsReadWriteContext,
+    QgsLayoutItemPage, QgsLayerTreeGroup, QgsLegendStyle
 )
 
 from qgis.PyQt.QtXml import QDomDocument
